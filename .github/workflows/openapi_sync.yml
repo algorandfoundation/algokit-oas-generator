@@ -1,0 +1,50 @@
+name: OpenAPI Sync
+# This workflow runs weekly to check if the OpenAPI specifications need to be converted
+# and ensures the generated specs are up to date. It processes algod, indexer, and kmd in parallel.
+
+on:
+  schedule:
+    # Runs every Monday at 9:00 AM UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  openapi_sync:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        spec: [algod, indexer, kmd]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: openapi-converter/package-lock.json
+
+      - name: Install openapi-converter dependencies
+        working-directory: openapi-converter
+        run: npm ci
+
+      - name: Store initial state for ${{ matrix.spec }}
+        run: git status --porcelain > /tmp/initial_${{ matrix.spec }}_status.txt
+
+      - name: Convert ${{ matrix.spec }} OpenAPI specification
+        working-directory: openapi-converter
+        run: npm run convert-${{ matrix.spec }}
+
+      - name: Check for ${{ matrix.spec }} changes
+        run: |
+          git status --porcelain > /tmp/post_${{ matrix.spec }}_status.txt
+          if [ -s /tmp/post_${{ matrix.spec }}_status.txt ]; then
+            echo "❌ ${{ matrix.spec }} OpenAPI sync needed!"
+            echo "🔧 Run 'npm run convert-${{ matrix.spec }}' locally in openapi-converter/ and commit"
+            git diff
+            exit 1
+          else
+            echo "✅ ${{ matrix.spec }} OpenAPI sync passed"
+          fi

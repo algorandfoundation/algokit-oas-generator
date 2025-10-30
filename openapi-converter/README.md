@@ -221,6 +221,66 @@ If conversion fails:
 - Ensure Node.js and npm are up to date
 - Check console output for specific error messages
 
+## CI/CD Automation
+
+This repository includes automated workflows for maintaining and releasing OpenAPI specifications.
+
+### Weekly Sync Workflow
+
+**File**: `.github/workflows/openapi_sync.yml`
+
+Runs every Monday at 9:00 AM UTC to detect upstream changes in Algorand's API specifications.
+
+**What it does**:
+- Fetches latest specs from go-algorand and indexer repositories
+- Converts them using the same process as `npm run convert-openapi`
+- Compares generated files with committed versions
+- Fails if differences are detected (indicating upstream changes)
+
+**When it fails**:
+1. Run `npm run convert-openapi` locally
+2. Review the changes with `git diff`
+3. Commit and push the updated specs
+
+**Manual trigger**:
+```bash
+# Via GitHub Actions UI: Actions > OpenAPI Sync > Run workflow
+```
+
+### Release Workflow
+
+**File**: `.github/workflows/openapi_release.yml`
+
+Creates GitHub releases with converted OpenAPI 3.0 specifications as downloadable assets.
+
+**What it does**:
+- Converts all three API specs (algod, indexer, kmd)
+- Creates a GitHub release with the specs as attachments
+- Includes metadata about source versions in release notes
+
+**Trigger methods**:
+
+1. **Push a git tag**:
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+2. **Manual workflow dispatch**:
+```bash
+# Via GitHub Actions UI: Actions > OpenAPI Release > Run workflow
+# Enter tag name: v1.0.0
+```
+
+**Using released specs**:
+```bash
+# Download from releases
+curl -LO https://github.com/YOUR_ORG/algokit-configs/releases/download/v1.0.0/algod.oas3.json
+
+# Use with any OpenAPI code generator
+openapi-generator generate -i algod.oas3.json -g python -o ./client
+```
+
 ## Why OpenAPI 3.0?
 
 OpenAPI 3.0 is preferred over Swagger 2.0 for several reasons:
