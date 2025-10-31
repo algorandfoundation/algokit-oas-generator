@@ -1002,6 +1002,7 @@ async function processAlgodSpec() {
       { path: "/v2/deltas/{round}", methods: ["get"] },
       { path: "/v2/deltas/txn/group/{id}", methods: ["get"] },
       { path: "/v2/deltas/{round}/txn/group", methods: ["get"] },
+      { path: "/v2/transactions/simulate", methods: ["post"] },
     ],
     jsonOnlyEndpoints: [
       { path: "/v2/accounts/{address}", methods: ["get"] },

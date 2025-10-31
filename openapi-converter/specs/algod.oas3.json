@@ -2522,20 +2522,15 @@
             "schema": {
               "type": "string",
               "enum": [
-                "json",
                 "msgpack"
-              ]
+              ],
+              "default": "msgpack"
             }
           }
         ],
         "requestBody": {
           "description": "The transactions to simulate, along with any other inputs.",
           "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SimulateRequest"
-              }
-            },
             "application/msgpack": {
               "schema": {
                 "$ref": "#/components/schemas/SimulateRequest"
@@ -2548,45 +2543,6 @@
           "200": {
             "description": "Result of a transaction group simulation.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "required": [
-                    "last-round",
-                    "txn-groups",
-                    "version"
-                  ],
-                  "type": "object",
-                  "properties": {
-                    "version": {
-                      "type": "integer",
-                      "description": "The version of this response object.",
-                      "x-algokit-bigint": true
-                    },
-                    "last-round": {
-                      "type": "integer",
-                      "description": "The round immediately preceding this simulation. State changes through this round were used to run this simulation.",
-                      "x-go-type": "basics.Round",
-                      "x-algokit-bigint": true
-                    },
-                    "txn-groups": {
-                      "type": "array",
-                      "description": "A result object for each transaction group that was simulated.",
-                      "items": {
-                        "$ref": "#/components/schemas/SimulateTransactionGroupResult"
-                      }
-                    },
-                    "eval-overrides": {
-                      "$ref": "#/components/schemas/SimulationEvalOverrides"
-                    },
-                    "exec-trace-config": {
-                      "$ref": "#/components/schemas/SimulateTraceConfig"
-                    },
-                    "initial-states": {
-                      "$ref": "#/components/schemas/SimulateInitialStates"
-                    }
-                  }
-                }
-              },
               "application/msgpack": {
                 "schema": {
                   "required": [
@@ -2631,11 +2587,6 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              },
               "application/msgpack": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
@@ -2646,11 +2597,6 @@
           "401": {
             "description": "Invalid API Token",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              },
               "application/msgpack": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
@@ -2661,11 +2607,6 @@
           "500": {
             "description": "Internal Error",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              },
               "application/msgpack": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
@@ -2676,11 +2617,6 @@
           "503": {
             "description": "Service Temporarily Unavailable",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              },
               "application/msgpack": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
