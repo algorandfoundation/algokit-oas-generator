@@ -4,6 +4,7 @@ import { writeFileSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import SwaggerParser from "@apidevtools/swagger-parser";
 import { fileURLToPath } from "node:url";
+import { format } from "node:path";
 
 // ===== TYPES =====
 
@@ -595,7 +596,10 @@ function resolveRef(spec: OpenAPISpec, ref: string): any {
  * Strip APIVn prefix from component schema names and update all $ref usages (KMD-specific)
  * Adds x-algokit-original-name and x-algokit-version metadata for traceability.
  */
-function stripKmdApiVersionPrefixes(spec: OpenAPISpec): { renamed: number; collisions: number } {
+function stripKmdApiVersionPrefixes(spec: OpenAPISpec): {
+  renamed: number;
+  collisions: number;
+} {
   let renamed = 0;
   let collisions = 0;
 
@@ -962,6 +966,41 @@ async function processAlgodSpec() {
           maximum: 3,
         },
       },
+      {
+        fieldName: "upgrade-votes-required",
+        removeItems: ["x-go-type"],
+        addItems: {
+          format: "int32",
+        },
+      },
+      {
+        fieldName: "upgrade-votes",
+        removeItems: ["x-go-type"],
+        addItems: {
+          format: "int32",
+        },
+      },
+      {
+        fieldName: "upgrade-yes-votes",
+        removeItems: ["x-go-type"],
+        addItems: {
+          format: "int32",
+        },
+      },
+      {
+        fieldName: "upgrade-no-votes",
+        removeItems: ["x-go-type"],
+        addItems: {
+          format: "int32",
+        },
+      },
+      {
+        fieldName: "upgrade-vote-rounds",
+        removeItems: ["x-go-type"],
+        addItems: {
+          format: "int32",
+        },
+      },
     ],
     vendorExtensionTransforms: [
       {
@@ -991,6 +1030,27 @@ async function processAlgodSpec() {
         targetProperty: "x-algokit-signed-txn",
         targetValue: true,
         removeSource: true,
+      },
+      {
+        sourceProperty: "x-go-type",
+        sourceValue: "basics.AppIndex",
+        targetProperty: "x-algokit-bigint",
+        targetValue: true,
+        removeSource: false,
+      },
+      {
+        sourceProperty: "x-go-type",
+        sourceValue: "basics.Round",
+        targetProperty: "x-algokit-bigint",
+        targetValue: true,
+        removeSource: false,
+      },
+      {
+        sourceProperty: "x-go-type",
+        sourceValue: "basics.AssetIndex",
+        targetProperty: "x-algokit-bigint",
+        targetValue: true,
+        removeSource: false,
       },
     ],
     msgpackOnlyEndpoints: [
@@ -1055,8 +1115,16 @@ async function processIndexerSpec() {
     sourceUrl: `https://raw.githubusercontent.com/algorand/indexer/${indexerTag}/api/indexer.oas2.json`,
     outputPath: join(process.cwd(), "specs", "indexer.oas3.json"),
     requiredFieldTransforms: [
-      { schemaName: "ApplicationParams", fieldName: "approval-program", makeRequired: false },
-      { schemaName: "ApplicationParams", fieldName: "clear-state-program", makeRequired: false },
+      {
+        schemaName: "ApplicationParams",
+        fieldName: "approval-program",
+        makeRequired: false,
+      },
+      {
+        schemaName: "ApplicationParams",
+        fieldName: "clear-state-program",
+        makeRequired: false,
+      },
     ],
     fieldTransforms: [
       {
