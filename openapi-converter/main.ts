@@ -1001,6 +1001,13 @@ async function processAlgodSpec() {
           format: "int32",
         },
       },
+      {
+        fieldName: "type",
+        removeItems: ["x-go-type"],
+        addItems: {
+          format: "int32",
+        },
+      },
     ],
     vendorExtensionTransforms: [
       {
