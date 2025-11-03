@@ -61,6 +61,49 @@ The converted OpenAPI 3.0 specifications will be written to:
 - `specs/indexer.oas3.json` - Indexer API specification
 - `specs/kmd.oas3.json` - KMD API specification
 
+## How It Works
+
+The converter processes API specifications through a five-stage pipeline:
+
+```mermaid
+flowchart TD
+    Start([User Command]) --> Parse[Parse CLI Args]
+    Parse --> FetchVersion{Fetch Latest<br/>Version?}
+    
+    FetchVersion -->|Yes| GitHub[Query GitHub API]
+    FetchVersion -->|No| Version[Use Default]
+    GitHub --> Version
+    
+    Version --> SelectAPI{Select API}
+    SelectAPI -->|Algod| ConfigA[Load Algod Config]
+    SelectAPI -->|Indexer| ConfigI[Load Indexer Config]
+    SelectAPI -->|KMD| ConfigK[Load KMD Config]
+    
+    ConfigA --> Process[Process Pipeline]
+    ConfigI --> Process
+    ConfigK --> Process
+    
+    Process --> Fetch[1. Fetch Spec]
+    Fetch --> Convert[2. Convert OAS2→OAS3]
+    Convert --> Transform[3. Apply Transformations]
+    Transform --> Validate[4. Validate]
+    Validate --> Write[5. Write Output]
+    Write --> End([Enhanced Spec])
+    
+    style Start fill:#e1f5ff
+    style Process fill:#fff4e1
+    style Transform fill:#ffe1f5
+    style End fill:#e1ffe1
+```
+
+**Process Overview:**
+
+1. **Fetch**: Downloads the latest specification from Algorand's GitHub repository
+2. **Convert**: Transforms Swagger 2.0 to OpenAPI 3.0 format using swagger-converter
+3. **Transform**: Applies Algorand-specific enhancements (vendor extensions, field fixes, etc.)
+4. **Validate**: Ensures the output is a valid OpenAPI 3.0 specification
+5. **Output**: Writes the enhanced specification to the `specs/` directory
+
 ## Source Specifications
 
 ### Algod
@@ -83,7 +126,21 @@ The converted OpenAPI 3.0 specifications will be written to:
 
 ## Algorand-Specific Transformations
 
-The converter applies several transformations to make the specs more suitable for code generation:
+The converter applies several transformations to make the specs more suitable for code generation. Transformations are applied sequentially in the following order:
+
+```mermaid
+flowchart LR
+    Input[OpenAPI 3.0 Spec] --> T1[Fix Descriptions]
+    T1 --> T2[Fix Known Bugs]
+    T2 --> T3[Add Type Metadata]
+    T3 --> T4[Transform Fields]
+    T4 --> T5[Configure Endpoints]
+    T5 --> Output[Enhanced Spec]
+    
+    style Input fill:#e3f2fd
+    style T3 fill:#fff3e0
+    style Output fill:#e8f5e9
+```
 
 ### 1. Vendor Extensions
 
