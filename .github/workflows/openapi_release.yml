@@ -1,0 +1,85 @@
+name: OpenAPI Release
+# This workflow generates GitHub releases with the converted OpenAPI 3.0 specifications
+# as release assets. The specs are automatically fetched from the latest Algorand upstream versions.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag name (e.g., v1.0.0)'
+        required: true
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: openapi-converter/package-lock.json
+
+      - name: Install openapi-converter dependencies
+        working-directory: openapi-converter
+        run: npm ci
+
+      - name: Convert all OpenAPI specifications
+        working-directory: openapi-converter
+        run: npm run convert-openapi
+
+      - name: Determine tag name
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag_name=${{ inputs.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          name: Release ${{ steps.tag.outputs.tag_name }}
+          body: |
+            ## Algorand OpenAPI 3.0 Specifications
+
+            This release contains converted OpenAPI 3.0 specifications for the Algorand APIs.
+
+            ### Included Specifications
+            - **algod.oas3.json** - Algorand node daemon API
+            - **indexer.oas3.json** - Algorand Indexer API
+            - **kmd.oas3.json** - Key Management Daemon API
+
+            ### Usage
+            Download the specifications and use them with your preferred code generator:
+
+            ```bash
+            # Download a specific spec
+            curl -LO https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.tag_name }}/algod.oas3.json
+
+            # Use with openapi-generator
+            openapi-generator generate -i algod.oas3.json -g python -o ./algod-client
+            ```
+
+            ### Source Versions
+            The specifications are automatically fetched from the latest stable releases of:
+            - [go-algorand](https://github.com/algorand/go-algorand) (algod & kmd)
+            - [indexer](https://github.com/algorand/indexer)
+
+            See the converter logs above for exact upstream versions used.
+          files: |
+            openapi-converter/specs/algod.oas3.json
+            openapi-converter/specs/indexer.oas3.json
+            openapi-converter/specs/kmd.oas3.json
+          draft: false
+          prerelease: false
