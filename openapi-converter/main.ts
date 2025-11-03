@@ -303,6 +303,9 @@ function fixBigInt(spec: OpenAPISpec): number {
     { fieldName: "fee" },
     { fieldName: "min-fee" },
     { fieldName: "round" },
+    { fieldName: "round-number" },
+    { fieldName: "min-round" },
+    { fieldName: "max-round" },
     { fieldName: "last-round" },
     { fieldName: "confirmed-round" },
     { fieldName: "asset-id" },
@@ -322,7 +325,7 @@ function fixBigInt(spec: OpenAPISpec): number {
     { fieldName: "index", excludedModels: ["LightBlockHeaderProof"] },
     { fieldName: "last-proposed" },
     { fieldName: "last-heartbeat" },
-    { fieldName: "application-index" },
+    { fieldName: "application-id" },
     { fieldName: "min-balance" },
     { fieldName: "amount-without-pending-rewards" },
     { fieldName: "pending-rewards" },
@@ -333,6 +336,24 @@ function fixBigInt(spec: OpenAPISpec): number {
     { fieldName: "vote-last-valid" },
     { fieldName: "catchup-time" },
     { fieldName: "time-since-last-round" },
+    { fieldName: "currency-greater-than" },
+    { fieldName: "currency-less-than" },
+    { fieldName: "rewards-calculation-round" },
+    { fieldName: "rewards-level" },
+    { fieldName: "rewards-rate" },
+    { fieldName: "rewards-residue" },
+    { fieldName: "next-protocol-switch-on" },
+    { fieldName: "next-protocol-vote-before" },
+    { fieldName: "upgrade-delay" },
+    { fieldName: "app" },
+    { fieldName: "asset" },
+    { fieldName: "current-round" },
+    { fieldName: "application-id" },
+    { fieldName: "online-total-weight" },
+    { fieldName: "close-amount" },
+    { fieldName: "close-rewards" },
+    { fieldName: "receiver-rewards" },
+    { fieldName: "sender-rewards" },
   ];
 
   const processObject = (obj: any, objName?: string): void => {
@@ -351,6 +372,18 @@ function fixBigInt(spec: OpenAPISpec): number {
           if (propDef && typeof propDef === "object" && propDef.type === "integer" && !propDef["x-algokit-bigint"]) {
             if (bigIntFields.findIndex((f) => f.fieldName === propName && (!objName || !f.excludedModels?.includes(objName))) > -1) {
               propDef["x-algokit-bigint"] = true;
+              fixedCount++;
+            }
+          }
+        }
+      }
+
+      // Check if this is a parameters array (query parameters)
+      if (key === "parameters" && Array.isArray(value)) {
+        for (const param of value) {
+          if (param && typeof param === "object" && param.name && param.schema?.type === "integer" && !param.schema["x-algokit-bigint"]) {
+            if (bigIntFields.findIndex((f) => f.fieldName === param.name && (!objName || !f.excludedModels?.includes(objName))) > -1) {
+              param.schema["x-algokit-bigint"] = true;
               fixedCount++;
             }
           }
@@ -969,44 +1002,26 @@ async function processAlgodSpec() {
       {
         fieldName: "upgrade-votes-required",
         removeItems: ["x-go-type"],
-        addItems: {
-          format: "int32",
-        },
       },
       {
         fieldName: "upgrade-votes",
         removeItems: ["x-go-type"],
-        addItems: {
-          format: "int32",
-        },
       },
       {
         fieldName: "upgrade-yes-votes",
         removeItems: ["x-go-type"],
-        addItems: {
-          format: "int32",
-        },
       },
       {
         fieldName: "upgrade-no-votes",
         removeItems: ["x-go-type"],
-        addItems: {
-          format: "int32",
-        },
       },
       {
         fieldName: "upgrade-vote-rounds",
         removeItems: ["x-go-type"],
-        addItems: {
-          format: "int32",
-        },
       },
       {
         fieldName: "type",
         removeItems: ["x-go-type"],
-        addItems: {
-          format: "int32",
-        },
       },
     ],
     vendorExtensionTransforms: [
@@ -1155,6 +1170,18 @@ async function processIndexerSpec() {
         addItems: {
           minimum: 0,
           maximum: 3,
+        },
+      },
+      {
+        fieldName: "foreign-apps.items",
+        addItems: {
+          "x-algokit-bigint": true,
+        },
+      },
+      {
+        fieldName: "foreign-assets.items",
+        addItems: {
+          "x-algokit-bigint": true,
         },
       },
     ],
