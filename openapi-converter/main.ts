@@ -38,6 +38,7 @@ interface RequiredFieldTransform {
 
 interface FieldTransform {
   fieldName: string; // e.g., "action"
+  schemaName?: string; // Optional: specific schema name to target, e.g., "TealKeyValue"
   removeItems?: string[]; // properties to remove from the target property, e.g., ["format"]
   addItems?: Record<string, any>; // properties to add to the target property, e.g., {"x-custom": true}
 }
@@ -217,7 +218,10 @@ function fixFieldNaming(spec: OpenAPISpec): number {
   // Properties that should be renamed for better developer experience
   const fieldRenames = [
     { from: "application-index", to: "app_id" },
+    { from: "app-index", to: "app_id" },
+    { from: "created-application-index", to: "created_app_id" },
     { from: "asset-index", to: "asset_id" },
+    { from: "created-asset-index", to: "created_asset_id" },
   ];
 
   const processObject = (obj: any): void => {
@@ -311,7 +315,6 @@ function fixBigInt(spec: OpenAPISpec): number {
     { fieldName: "asset-id" },
     { fieldName: "created-application-index" },
     { fieldName: "created-asset-index" },
-    { fieldName: "txn-index" },
     { fieldName: "application-index" },
     { fieldName: "asset-index" },
     { fieldName: "current_round" },
@@ -426,6 +429,14 @@ function transformProperties(spec: OpenAPISpec, transforms: FieldTransform[]): n
 
       // Check if current path matches the target property path
       if (fullPath.endsWith(targetPath)) {
+        // If schemaName is specified, check if we're in the correct schema context
+        if (transform.schemaName) {
+          const schemaPath = `components.schemas.${transform.schemaName}.properties.${transform.fieldName}`;
+          if (!fullPath.endsWith(schemaPath)) {
+            continue; // Skip this transform if not in the specified schema
+          }
+        }
+
         // Remove specified items from this property
         if (transform.removeItems) {
           for (const itemToRemove of transform.removeItems) {
@@ -1022,6 +1033,54 @@ async function processAlgodSpec() {
       {
         fieldName: "type",
         removeItems: ["x-go-type"],
+      },
+      {
+        fieldName: "decimals",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "total-apps-opted-in",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "total-assets-opted-in",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "total-created-apps",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "total-created-assets",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "apps-total-extra-pages",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "total-boxes",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "total-box-bytes",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "key",
+        schemaName: "TealKeyValue",
+        addItems: {
+          pattern: "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+          format: "byte",
+        },
+      },
+      {
+        fieldName: "key",
+        schemaName: "EvalDeltaKeyValue",
+        addItems: {
+          pattern: "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+          format: "byte",
+        },
       },
     ],
     vendorExtensionTransforms: [
