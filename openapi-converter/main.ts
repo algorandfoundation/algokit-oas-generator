@@ -1040,13 +1040,6 @@ async function processAlgodSpec() {
         removeSource: false,
       },
       {
-        sourceProperty: "x-go-type",
-        sourceValue: "uint64",
-        targetProperty: "x-algokit-bigint",
-        targetValue: true,
-        removeSource: true,
-      },
-      {
         sourceProperty: "x-algorand-format",
         sourceValue: "SignedTransaction",
         targetProperty: "x-algokit-signed-txn",
@@ -1199,13 +1192,6 @@ async function processIndexerSpec() {
         targetProperty: "x-algokit-bigint",
         targetValue: true,
         removeSource: false,
-      },
-      {
-        sourceProperty: "x-go-type",
-        sourceValue: "uint64",
-        targetProperty: "x-algokit-bigint",
-        targetValue: true,
-        removeSource: true,
       },
       {
         sourceProperty: "x-algorand-format",
