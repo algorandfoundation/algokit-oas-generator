@@ -958,7 +958,7 @@
           "nonparticipating"
         ],
         "summary": "Get the top level transaction IDs for the block on the given round.",
-        "operationId": "GetBlockTxids",
+        "operationId": "GetBlockTxIds",
         "parameters": [
           {
             "name": "round",
@@ -991,7 +991,8 @@
                       "description": "Block transaction IDs.",
                       "items": {
                         "type": "string"
-                      }
+                      },
+                      "x-algokit-field-rename": "block_tx_ids"
                     }
                   }
                 }
@@ -6792,7 +6793,8 @@
                   "description": "Block transaction IDs.",
                   "items": {
                     "type": "string"
-                  }
+                  },
+                  "x-algokit-field-rename": "block_tx_ids"
                 }
               }
             }

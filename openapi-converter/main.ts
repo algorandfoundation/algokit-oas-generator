@@ -26,7 +26,7 @@ interface VendorExtensionTransform {
   sourceProperty: string; // e.g., "x-algorand-format" or "format"
   sourceValue: string; // e.g., "uint64"
   targetProperty: string; // e.g., "x-algokit-bigint"
-  targetValue: boolean; // value to set
+  targetValue: boolean | string; // value to set
   removeSource?: boolean; // whether to remove the source property (default false)
 }
 
@@ -222,6 +222,7 @@ function fixFieldNaming(spec: OpenAPISpec): number {
     { from: "created-application-index", to: "created_app_id" },
     { from: "asset-index", to: "asset_id" },
     { from: "created-asset-index", to: "created_asset_id" },
+    { from: "blockTxids", to: "block_tx_ids" },
   ];
 
   const processObject = (obj: any): void => {
@@ -1124,6 +1125,13 @@ async function processAlgodSpec() {
         sourceValue: "basics.AssetIndex",
         targetProperty: "x-algokit-bigint",
         targetValue: true,
+        removeSource: false,
+      },
+      {
+        sourceProperty: "operationId",
+        sourceValue: "GetBlockTxids",
+        targetProperty: "operationId",
+        targetValue: "GetBlockTxIds",
         removeSource: false,
       },
     ],
