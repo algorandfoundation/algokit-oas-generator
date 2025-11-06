@@ -1011,8 +1011,6 @@ async function processAlgodSpec() {
           maximum: 3,
         },
       },
-<<<<<<< HEAD
-=======
       {
         fieldName: "upgrade-votes-required",
         removeItems: ["x-go-type"],
@@ -1085,7 +1083,6 @@ async function processAlgodSpec() {
           format: "byte",
         },
       },
->>>>>>> 85e83ba (chore: resolved merge conflicts after moving files to the top-level)
     ],
     vendorExtensionTransforms: [
       {
@@ -1103,24 +1100,12 @@ async function processAlgodSpec() {
         removeSource: false,
       },
       {
-<<<<<<< HEAD
-        sourceProperty: "x-go-type",
-        sourceValue: "uint64",
-        targetProperty: "x-algokit-bigint",
-        targetValue: true,
-        removeSource: true,
-      },
-      {
-=======
->>>>>>> 85e83ba (chore: resolved merge conflicts after moving files to the top-level)
         sourceProperty: "x-algorand-format",
         sourceValue: "SignedTransaction",
         targetProperty: "x-algokit-signed-txn",
         targetValue: true,
         removeSource: true,
       },
-<<<<<<< HEAD
-=======
       {
         sourceProperty: "x-go-type",
         sourceValue: "basics.AppIndex",
@@ -1149,7 +1134,6 @@ async function processAlgodSpec() {
         targetValue: "GetBlockTxIds",
         removeSource: false,
       },
->>>>>>> 85e83ba (chore: resolved merge conflicts after moving files to the top-level)
     ],
     msgpackOnlyEndpoints: [
       // Align with Go and JS SDKs that hardcode these to msgpack
@@ -1160,10 +1144,7 @@ async function processAlgodSpec() {
       { path: "/v2/deltas/{round}", methods: ["get"] },
       { path: "/v2/deltas/txn/group/{id}", methods: ["get"] },
       { path: "/v2/deltas/{round}/txn/group", methods: ["get"] },
-<<<<<<< HEAD
-=======
       { path: "/v2/transactions/simulate", methods: ["post"] },
->>>>>>> 85e83ba (chore: resolved merge conflicts after moving files to the top-level)
     ],
     jsonOnlyEndpoints: [
       { path: "/v2/accounts/{address}", methods: ["get"] },
