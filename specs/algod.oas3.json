@@ -364,9 +364,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.AssetIndex"
+              "x-go-type": "basics.AssetIndex",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.AssetIndex"
+            "x-go-type": "basics.AssetIndex",
+            "x-algokit-bigint": true
           },
           {
             "name": "format",
@@ -474,9 +476,9 @@
             "description": "Maximum number of results to return.",
             "schema": {
               "type": "integer",
-              "x-algokit-bigint": true
+              "x-go-type": "uint64"
             },
-            "x-algokit-bigint": true
+            "x-go-type": "uint64"
           },
           {
             "name": "next",
@@ -586,9 +588,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.AppIndex"
+              "x-go-type": "basics.AppIndex",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.AppIndex"
+            "x-go-type": "basics.AppIndex",
+            "x-algokit-bigint": true
           },
           {
             "name": "format",
@@ -733,9 +737,9 @@
             "description": "Truncated number of transactions to display. If max=0, returns all pending txns.",
             "schema": {
               "type": "integer",
-              "x-algokit-bigint": true
+              "x-go-type": "uint64"
             },
-            "x-algokit-bigint": true
+            "x-go-type": "uint64"
           },
           {
             "name": "format",
@@ -845,9 +849,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.Round"
+              "x-go-type": "basics.Round",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           },
           {
             "name": "header-only",
@@ -952,7 +958,7 @@
           "nonparticipating"
         ],
         "summary": "Get the top level transaction IDs for the block on the given round.",
-        "operationId": "GetBlockTxids",
+        "operationId": "GetBlockTxIds",
         "parameters": [
           {
             "name": "round",
@@ -962,9 +968,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.Round"
+              "x-go-type": "basics.Round",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           }
         ],
         "responses": {
@@ -983,7 +991,8 @@
                       "description": "Block transaction IDs.",
                       "items": {
                         "type": "string"
-                      }
+                      },
+                      "x-algokit-field-rename": "block_tx_ids"
                     }
                   }
                 }
@@ -1054,9 +1063,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.Round"
+              "x-go-type": "basics.Round",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           }
         ],
         "responses": {
@@ -1143,9 +1154,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.Round"
+              "x-go-type": "basics.Round",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           },
           {
             "name": "txid",
@@ -1258,9 +1271,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.Round"
+              "x-go-type": "basics.Round",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           }
         ],
         "responses": {
@@ -1358,11 +1373,13 @@
                     "online-money": {
                       "type": "integer",
                       "description": "OnlineMoney",
+                      "x-go-type": "uint64",
                       "x-algokit-bigint": true
                     },
                     "total-money": {
                       "type": "integer",
                       "description": "TotalMoney",
+                      "x-go-type": "uint64",
                       "x-algokit-bigint": true
                     }
                   },
@@ -1596,7 +1613,8 @@
               "x-go-type": "basics.Round",
               "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           },
           {
             "name": "last",
@@ -1609,7 +1627,8 @@
               "x-go-type": "basics.Round",
               "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           }
         ],
         "responses": {
@@ -1984,7 +2003,8 @@
                     "next-version-round": {
                       "type": "integer",
                       "description": "NextVersionRound is the round at which the next consensus version will apply",
-                      "x-go-type": "basics.Round"
+                      "x-go-type": "basics.Round",
+                      "x-algokit-bigint": true
                     },
                     "next-version-supported": {
                       "type": "boolean",
@@ -2011,47 +2031,48 @@
                     "catchpoint-total-accounts": {
                       "type": "integer",
                       "description": "The total number of accounts included in the current catchpoint",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-processed-accounts": {
                       "type": "integer",
                       "description": "The number of accounts from the current catchpoint that have been processed so far as part of the catchup",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-verified-accounts": {
                       "type": "integer",
                       "description": "The number of accounts from the current catchpoint that have been verified so far as part of the catchup",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-total-kvs": {
                       "type": "integer",
                       "description": "The total number of key-values (KVs) included in the current catchpoint",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-processed-kvs": {
                       "type": "integer",
                       "description": "The number of key-values (KVs) from the current catchpoint that have been processed so far as part of the catchup",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-verified-kvs": {
                       "type": "integer",
                       "description": "The number of key-values (KVs) from the current catchpoint that have been verified so far as part of the catchup",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-total-blocks": {
                       "type": "integer",
                       "description": "The total number of blocks that are required to complete the current catchpoint catchup",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-acquired-blocks": {
                       "type": "integer",
                       "description": "The number of blocks that have already been obtained by the node as part of the catchup",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "upgrade-delay": {
                       "type": "integer",
                       "description": "Upgrade delay",
-                      "x-go-type": "basics.Round"
+                      "x-go-type": "basics.Round",
+                      "x-algokit-bigint": true
                     },
                     "upgrade-node-vote": {
                       "type": "boolean",
@@ -2059,33 +2080,29 @@
                     },
                     "upgrade-votes-required": {
                       "type": "integer",
-                      "description": "Yes votes required for consensus upgrade",
-                      "x-go-type": "basics.Round"
+                      "description": "Yes votes required for consensus upgrade"
                     },
                     "upgrade-votes": {
                       "type": "integer",
-                      "description": "Total votes cast for consensus upgrade",
-                      "x-go-type": "basics.Round"
+                      "description": "Total votes cast for consensus upgrade"
                     },
                     "upgrade-yes-votes": {
                       "type": "integer",
-                      "description": "Yes votes cast for consensus upgrade",
-                      "x-go-type": "basics.Round"
+                      "description": "Yes votes cast for consensus upgrade"
                     },
                     "upgrade-no-votes": {
                       "type": "integer",
-                      "description": "No votes cast for consensus upgrade",
-                      "x-go-type": "basics.Round"
+                      "description": "No votes cast for consensus upgrade"
                     },
                     "upgrade-next-protocol-vote-before": {
                       "type": "integer",
                       "description": "Next protocol round",
-                      "x-go-type": "basics.Round"
+                      "x-go-type": "basics.Round",
+                      "x-algokit-bigint": true
                     },
                     "upgrade-vote-rounds": {
                       "type": "integer",
-                      "description": "Total voting rounds for current upgrade",
-                      "x-go-type": "basics.Round"
+                      "description": "Total voting rounds for current upgrade"
                     }
                   },
                   "description": "NodeStatus contains the information about a node status"
@@ -2139,9 +2156,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.Round"
+              "x-go-type": "basics.Round",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           }
         ],
         "responses": {
@@ -2184,7 +2203,8 @@
                     "next-version-round": {
                       "type": "integer",
                       "description": "NextVersionRound is the round at which the next consensus version will apply",
-                      "x-go-type": "basics.Round"
+                      "x-go-type": "basics.Round",
+                      "x-algokit-bigint": true
                     },
                     "next-version-supported": {
                       "type": "boolean",
@@ -2211,47 +2231,48 @@
                     "catchpoint-total-accounts": {
                       "type": "integer",
                       "description": "The total number of accounts included in the current catchpoint",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-processed-accounts": {
                       "type": "integer",
                       "description": "The number of accounts from the current catchpoint that have been processed so far as part of the catchup",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-verified-accounts": {
                       "type": "integer",
                       "description": "The number of accounts from the current catchpoint that have been verified so far as part of the catchup",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-total-kvs": {
                       "type": "integer",
                       "description": "The total number of key-values (KVs) included in the current catchpoint",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-processed-kvs": {
                       "type": "integer",
                       "description": "The number of key-values (KVs) from the current catchpoint that have been processed so far as part of the catchup",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-verified-kvs": {
                       "type": "integer",
                       "description": "The number of key-values (KVs) from the current catchpoint that have been verified so far as part of the catchup",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-total-blocks": {
                       "type": "integer",
                       "description": "The total number of blocks that are required to complete the current catchpoint catchup",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "catchpoint-acquired-blocks": {
                       "type": "integer",
                       "description": "The number of blocks that have already been obtained by the node as part of the catchup",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "upgrade-delay": {
                       "type": "integer",
                       "description": "Upgrade delay",
-                      "x-go-type": "basics.Round"
+                      "x-go-type": "basics.Round",
+                      "x-algokit-bigint": true
                     },
                     "upgrade-node-vote": {
                       "type": "boolean",
@@ -2259,33 +2280,29 @@
                     },
                     "upgrade-votes-required": {
                       "type": "integer",
-                      "description": "Yes votes required for consensus upgrade",
-                      "x-go-type": "basics.Round"
+                      "description": "Yes votes required for consensus upgrade"
                     },
                     "upgrade-votes": {
                       "type": "integer",
-                      "description": "Total votes cast for consensus upgrade",
-                      "x-go-type": "basics.Round"
+                      "description": "Total votes cast for consensus upgrade"
                     },
                     "upgrade-yes-votes": {
                       "type": "integer",
-                      "description": "Yes votes cast for consensus upgrade",
-                      "x-go-type": "basics.Round"
+                      "description": "Yes votes cast for consensus upgrade"
                     },
                     "upgrade-no-votes": {
                       "type": "integer",
-                      "description": "No votes cast for consensus upgrade",
-                      "x-go-type": "basics.Round"
+                      "description": "No votes cast for consensus upgrade"
                     },
                     "upgrade-next-protocol-vote-before": {
                       "type": "integer",
                       "description": "Next protocol round",
-                      "x-go-type": "basics.Round"
+                      "x-go-type": "basics.Round",
+                      "x-algokit-bigint": true
                     },
                     "upgrade-vote-rounds": {
                       "type": "integer",
-                      "description": "Total voting rounds for current upgrade",
-                      "x-go-type": "basics.Round"
+                      "description": "Total voting rounds for current upgrade"
                     }
                   },
                   "description": "NodeStatus contains the information about a node status"
@@ -2522,20 +2539,15 @@
             "schema": {
               "type": "string",
               "enum": [
-                "json",
                 "msgpack"
-              ]
+              ],
+              "default": "msgpack"
             }
           }
         ],
         "requestBody": {
           "description": "The transactions to simulate, along with any other inputs.",
           "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SimulateRequest"
-              }
-            },
             "application/msgpack": {
               "schema": {
                 "$ref": "#/components/schemas/SimulateRequest"
@@ -2548,45 +2560,6 @@
           "200": {
             "description": "Result of a transaction group simulation.",
             "content": {
-              "application/json": {
-                "schema": {
-                  "required": [
-                    "last-round",
-                    "txn-groups",
-                    "version"
-                  ],
-                  "type": "object",
-                  "properties": {
-                    "version": {
-                      "type": "integer",
-                      "description": "The version of this response object.",
-                      "x-algokit-bigint": true
-                    },
-                    "last-round": {
-                      "type": "integer",
-                      "description": "The round immediately preceding this simulation. State changes through this round were used to run this simulation.",
-                      "x-go-type": "basics.Round",
-                      "x-algokit-bigint": true
-                    },
-                    "txn-groups": {
-                      "type": "array",
-                      "description": "A result object for each transaction group that was simulated.",
-                      "items": {
-                        "$ref": "#/components/schemas/SimulateTransactionGroupResult"
-                      }
-                    },
-                    "eval-overrides": {
-                      "$ref": "#/components/schemas/SimulationEvalOverrides"
-                    },
-                    "exec-trace-config": {
-                      "$ref": "#/components/schemas/SimulateTraceConfig"
-                    },
-                    "initial-states": {
-                      "$ref": "#/components/schemas/SimulateInitialStates"
-                    }
-                  }
-                }
-              },
               "application/msgpack": {
                 "schema": {
                   "required": [
@@ -2599,7 +2572,7 @@
                     "version": {
                       "type": "integer",
                       "description": "The version of this response object.",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     },
                     "last-round": {
                       "type": "integer",
@@ -2631,11 +2604,6 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              },
               "application/msgpack": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
@@ -2646,11 +2614,6 @@
           "401": {
             "description": "Invalid API Token",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              },
               "application/msgpack": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
@@ -2661,11 +2624,6 @@
           "500": {
             "description": "Internal Error",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              },
               "application/msgpack": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
@@ -2676,11 +2634,6 @@
           "503": {
             "description": "Service Temporarily Unavailable",
             "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              },
               "application/msgpack": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
@@ -2727,6 +2680,7 @@
                     "fee": {
                       "type": "integer",
                       "description": "Fee is the suggested transaction fee\nFee is in units of micro-Algos per byte.\nFee may fall to zero but transactions must still have a fee of\nat least MinTxnFee for the current network protocol.",
+                      "x-go-type": "uint64",
                       "x-algokit-bigint": true
                     },
                     "genesis-hash": {
@@ -2748,6 +2702,7 @@
                     "min-fee": {
                       "type": "integer",
                       "description": "The minimum transaction fee (not per byte) required for the\ntxn to validate for the current network protocol.",
+                      "x-go-type": "uint64",
                       "x-algokit-bigint": true
                     }
                   },
@@ -2809,9 +2764,9 @@
             "description": "Truncated number of transactions to display. If max=0, returns all pending txns.",
             "schema": {
               "type": "integer",
-              "x-algokit-bigint": true
+              "x-go-type": "uint64"
             },
-            "x-algokit-bigint": true
+            "x-go-type": "uint64"
           },
           {
             "name": "format",
@@ -2993,9 +2948,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.Round"
+              "x-go-type": "basics.Round",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           },
           {
             "name": "format",
@@ -3096,9 +3053,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.Round"
+              "x-go-type": "basics.Round",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           },
           {
             "name": "format",
@@ -3310,9 +3269,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.Round"
+              "x-go-type": "basics.Round",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           }
         ],
         "responses": {
@@ -3400,9 +3361,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.Round"
+              "x-go-type": "basics.Round",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           }
         ],
         "responses": {
@@ -3491,9 +3454,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.AppIndex"
+              "x-go-type": "basics.AppIndex",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.AppIndex"
+            "x-go-type": "basics.AppIndex",
+            "x-algokit-bigint": true
           }
         ],
         "responses": {
@@ -3572,9 +3537,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.AppIndex"
+              "x-go-type": "basics.AppIndex",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.AppIndex"
+            "x-go-type": "basics.AppIndex",
+            "x-algokit-bigint": true
           },
           {
             "name": "max",
@@ -3582,9 +3549,9 @@
             "description": "Max number of box names to return. If max is not set, or max == 0, returns all box-names.",
             "schema": {
               "type": "integer",
-              "x-algokit-bigint": true
+              "x-go-type": "uint64"
             },
-            "x-algokit-bigint": true
+            "x-go-type": "uint64"
           }
         ],
         "responses": {
@@ -3664,9 +3631,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.AppIndex"
+              "x-go-type": "basics.AppIndex",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.AppIndex"
+            "x-go-type": "basics.AppIndex",
+            "x-algokit-bigint": true
           },
           {
             "name": "name",
@@ -3754,9 +3723,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.AssetIndex"
+              "x-go-type": "basics.AssetIndex",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.AssetIndex"
+            "x-go-type": "basics.AssetIndex",
+            "x-algokit-bigint": true
           }
         ],
         "responses": {
@@ -3972,9 +3943,11 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-go-type": "basics.Round"
+              "x-go-type": "basics.Round",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           }
         ],
         "responses": {
@@ -4244,9 +4217,11 @@
             "description": "Specify the minimum number of blocks which the ledger must be advanced by in order to start the catchup. This is useful for simplifying tools which support fast catchup, they can run the catchup unconditionally and the node will skip the catchup if it is not needed.",
             "schema": {
               "type": "integer",
-              "x-go-type": "basics.Round"
+              "x-go-type": "basics.Round",
+              "x-algokit-bigint": true
             },
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           }
         ],
         "responses": {
@@ -4562,7 +4537,7 @@
                     "offset": {
                       "type": "integer",
                       "description": "Timestamp offset in seconds.",
-                      "x-algokit-bigint": true
+                      "x-go-type": "uint64"
                     }
                   }
                 }
@@ -4604,9 +4579,9 @@
             "schema": {
               "minimum": 0,
               "type": "integer",
-              "x-algokit-bigint": true
+              "x-go-type": "uint64"
             },
-            "x-algokit-bigint": true
+            "x-go-type": "uint64"
           }
         ],
         "responses": {
@@ -4830,18 +4805,14 @@
           },
           "total-apps-opted-in": {
             "type": "integer",
-            "description": "The count of all applications that have been opted in, equivalent to the count of application local data (AppLocalState objects) stored in this account.",
-            "format": "uint64",
-            "x-algokit-bigint": true
+            "description": "The count of all applications that have been opted in, equivalent to the count of application local data (AppLocalState objects) stored in this account."
           },
           "apps-total-schema": {
             "$ref": "#/components/schemas/ApplicationStateSchema"
           },
           "apps-total-extra-pages": {
             "type": "integer",
-            "description": "\\[teap\\] the sum of all extra application program pages for this account.",
-            "format": "uint64",
-            "x-algokit-bigint": true
+            "description": "\\[teap\\] the sum of all extra application program pages for this account."
           },
           "assets": {
             "type": "array",
@@ -4852,9 +4823,7 @@
           },
           "total-assets-opted-in": {
             "type": "integer",
-            "description": "The count of all assets that have been opted in, equivalent to the count of AssetHolding objects held by this account.",
-            "format": "uint64",
-            "x-algokit-bigint": true
+            "description": "The count of all assets that have been opted in, equivalent to the count of AssetHolding objects held by this account."
           },
           "created-apps": {
             "type": "array",
@@ -4865,9 +4834,7 @@
           },
           "total-created-apps": {
             "type": "integer",
-            "description": "The count of all apps (AppParams objects) created by this account.",
-            "format": "uint64",
-            "x-algokit-bigint": true
+            "description": "The count of all apps (AppParams objects) created by this account."
           },
           "created-assets": {
             "type": "array",
@@ -4878,21 +4845,15 @@
           },
           "total-created-assets": {
             "type": "integer",
-            "description": "The count of all assets (AssetParams objects) created by this account.",
-            "format": "uint64",
-            "x-algokit-bigint": true
+            "description": "The count of all assets (AssetParams objects) created by this account."
           },
           "total-boxes": {
             "type": "integer",
-            "description": "\\[tbx\\] The number of existing boxes created by this account's app.",
-            "format": "uint64",
-            "x-algokit-bigint": true
+            "description": "\\[tbx\\] The number of existing boxes created by this account's app."
           },
           "total-box-bytes": {
             "type": "integer",
-            "description": "\\[tbxb\\] The total number of bytes used by this account's app's box keys and values.",
-            "format": "uint64",
-            "x-algokit-bigint": true
+            "description": "\\[tbxb\\] The total number of bytes used by this account's app's box keys and values."
           },
           "participation": {
             "$ref": "#/components/schemas/AccountParticipation"
@@ -4998,6 +4959,7 @@
           "vote-key-dilution": {
             "type": "integer",
             "description": "\\[voteKD\\] Number of subkeys in each batch of participation keys.",
+            "x-go-type": "uint64",
             "x-algokit-bigint": true
           },
           "vote-last-valid": {
@@ -5088,9 +5050,7 @@
             "maximum": 19,
             "minimum": 0,
             "type": "integer",
-            "description": "\\[dc\\] The number of digits to use after the decimal point when displaying this asset. If 0, the asset is not divisible. If 1, the base unit of the asset is in tenths. If 2, the base unit of the asset is in hundredths, and so on. This value must be between 0 and 19 (inclusive).",
-            "format": "uint64",
-            "x-algokit-bigint": true
+            "description": "\\[dc\\] The number of digits to use after the decimal point when displaying this asset. If 0, the asset is not divisible. If 1, the base unit of the asset is in tenths. If 2, the base unit of the asset is in hundredths, and so on. This value must be between 0 and 19 (inclusive)."
           },
           "default-frozen": {
             "type": "boolean",
@@ -5271,17 +5231,20 @@
           "last-vote": {
             "type": "integer",
             "description": "Round when this key was last used to vote.",
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           },
           "last-block-proposal": {
             "type": "integer",
             "description": "Round when this key was last used to propose a block.",
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           },
           "last-state-proof": {
             "type": "integer",
             "description": "Round when this key was last used to generate a state proof.",
-            "x-go-type": "basics.Round"
+            "x-go-type": "basics.Round",
+            "x-algokit-bigint": true
           },
           "key": {
             "$ref": "#/components/schemas/AccountParticipation"
@@ -5304,7 +5267,9 @@
         "type": "object",
         "properties": {
           "key": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+            "format": "byte"
           },
           "value": {
             "$ref": "#/components/schemas/TealValue"
@@ -5322,8 +5287,7 @@
         "properties": {
           "type": {
             "type": "integer",
-            "description": "\\[tt\\] value type. Value `1` refers to **bytes**, value `2` refers to **uint**",
-            "x-algokit-bigint": true
+            "description": "\\[tt\\] value type. Value `1` refers to **bytes**, value `2` refers to **uint**"
           },
           "bytes": {
             "type": "string",
@@ -5347,8 +5311,7 @@
         "properties": {
           "type": {
             "type": "integer",
-            "description": "value type. Value `1` refers to **bytes**, value `2` refers to **uint64**",
-            "x-algokit-bigint": true
+            "description": "value type. Value `1` refers to **bytes**, value `2` refers to **uint64**"
           },
           "bytes": {
             "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
@@ -5413,7 +5376,9 @@
         "type": "object",
         "properties": {
           "key": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+            "format": "byte"
           },
           "value": {
             "$ref": "#/components/schemas/EvalDelta"
@@ -5508,7 +5473,7 @@
           "version": {
             "type": "integer",
             "description": "\\[v\\] the number of updates to the application programs",
-            "x-algokit-bigint": true
+            "x-go-type": "uint64"
           }
         },
         "description": "Stores the global information associated with an application."
@@ -5711,12 +5676,12 @@
             "type": "string"
           },
           "txn-index": {
-            "type": "integer",
-            "x-algokit-bigint": true
+            "type": "integer"
           },
           "app-index": {
             "type": "integer",
             "x-go-type": "basics.AppIndex",
+            "x-algokit-field-rename": "app_id",
             "x-algokit-bigint": true
           }
         },
@@ -5862,7 +5827,8 @@
           "app": {
             "type": "integer",
             "description": "Application ID which this box belongs to",
-            "x-go-type": "basics.AppIndex"
+            "x-go-type": "basics.AppIndex",
+            "x-algokit-bigint": true
           },
           "name": {
             "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
@@ -5979,16 +5945,19 @@
           },
           "close-rewards": {
             "type": "integer",
-            "description": "Rewards in microalgos applied to the close remainder to account."
+            "description": "Rewards in microalgos applied to the close remainder to account.",
+            "x-algokit-bigint": true
           },
           "closing-amount": {
             "type": "integer",
             "description": "Closing amount for the transaction.",
+            "x-go-type": "uint64",
             "x-algokit-bigint": true
           },
           "asset-closing-amount": {
             "type": "integer",
             "description": "The number of the asset's unit that were transferred to the close-to address.",
+            "x-go-type": "uint64",
             "x-algokit-bigint": true
           },
           "confirmed-round": {
@@ -6004,11 +5973,13 @@
           "receiver-rewards": {
             "type": "integer",
             "description": "Rewards in microalgos applied to the receiver account.",
+            "x-go-type": "uint64",
             "x-algokit-bigint": true
           },
           "sender-rewards": {
             "type": "integer",
             "description": "Rewards in microalgos applied to the sender account.",
+            "x-go-type": "uint64",
             "x-algokit-bigint": true
           },
           "local-state-delta": {
@@ -6145,7 +6116,7 @@
           "index": {
             "type": "integer",
             "description": "The index of the light block header in the vector commitment tree",
-            "x-algokit-bigint": true
+            "x-go-type": "uint64"
           },
           "treedepth": {
             "type": "integer",
@@ -6563,12 +6534,12 @@
           "treedepth": {
             "type": "integer",
             "description": "Represents the depth of the tree that is being proven, i.e. the number of edges from a leaf to the root.",
-            "x-algokit-bigint": true
+            "x-go-type": "uint64"
           },
           "idx": {
             "type": "integer",
             "description": "Index of the transaction in the block's payset.",
-            "x-algokit-bigint": true
+            "x-go-type": "uint64"
           },
           "hashtype": {
             "type": "string",
@@ -6596,7 +6567,7 @@
                 "offset": {
                   "type": "integer",
                   "description": "Timestamp offset in seconds.",
-                  "x-algokit-bigint": true
+                  "x-go-type": "uint64"
                 }
               }
             }
@@ -6822,7 +6793,8 @@
                   "description": "Block transaction IDs.",
                   "items": {
                     "type": "string"
-                  }
+                  },
+                  "x-algokit-field-rename": "block_tx_ids"
                 }
               }
             }
@@ -6937,7 +6909,8 @@
                 "next-version-round": {
                   "type": "integer",
                   "description": "NextVersionRound is the round at which the next consensus version will apply",
-                  "x-go-type": "basics.Round"
+                  "x-go-type": "basics.Round",
+                  "x-algokit-bigint": true
                 },
                 "next-version-supported": {
                   "type": "boolean",
@@ -6964,47 +6937,48 @@
                 "catchpoint-total-accounts": {
                   "type": "integer",
                   "description": "The total number of accounts included in the current catchpoint",
-                  "x-algokit-bigint": true
+                  "x-go-type": "uint64"
                 },
                 "catchpoint-processed-accounts": {
                   "type": "integer",
                   "description": "The number of accounts from the current catchpoint that have been processed so far as part of the catchup",
-                  "x-algokit-bigint": true
+                  "x-go-type": "uint64"
                 },
                 "catchpoint-verified-accounts": {
                   "type": "integer",
                   "description": "The number of accounts from the current catchpoint that have been verified so far as part of the catchup",
-                  "x-algokit-bigint": true
+                  "x-go-type": "uint64"
                 },
                 "catchpoint-total-kvs": {
                   "type": "integer",
                   "description": "The total number of key-values (KVs) included in the current catchpoint",
-                  "x-algokit-bigint": true
+                  "x-go-type": "uint64"
                 },
                 "catchpoint-processed-kvs": {
                   "type": "integer",
                   "description": "The number of key-values (KVs) from the current catchpoint that have been processed so far as part of the catchup",
-                  "x-algokit-bigint": true
+                  "x-go-type": "uint64"
                 },
                 "catchpoint-verified-kvs": {
                   "type": "integer",
                   "description": "The number of key-values (KVs) from the current catchpoint that have been verified so far as part of the catchup",
-                  "x-algokit-bigint": true
+                  "x-go-type": "uint64"
                 },
                 "catchpoint-total-blocks": {
                   "type": "integer",
                   "description": "The total number of blocks that are required to complete the current catchpoint catchup",
-                  "x-algokit-bigint": true
+                  "x-go-type": "uint64"
                 },
                 "catchpoint-acquired-blocks": {
                   "type": "integer",
                   "description": "The number of blocks that have already been obtained by the node as part of the catchup",
-                  "x-algokit-bigint": true
+                  "x-go-type": "uint64"
                 },
                 "upgrade-delay": {
                   "type": "integer",
                   "description": "Upgrade delay",
-                  "x-go-type": "basics.Round"
+                  "x-go-type": "basics.Round",
+                  "x-algokit-bigint": true
                 },
                 "upgrade-node-vote": {
                   "type": "boolean",
@@ -7012,33 +6986,29 @@
                 },
                 "upgrade-votes-required": {
                   "type": "integer",
-                  "description": "Yes votes required for consensus upgrade",
-                  "x-go-type": "basics.Round"
+                  "description": "Yes votes required for consensus upgrade"
                 },
                 "upgrade-votes": {
                   "type": "integer",
-                  "description": "Total votes cast for consensus upgrade",
-                  "x-go-type": "basics.Round"
+                  "description": "Total votes cast for consensus upgrade"
                 },
                 "upgrade-yes-votes": {
                   "type": "integer",
-                  "description": "Yes votes cast for consensus upgrade",
-                  "x-go-type": "basics.Round"
+                  "description": "Yes votes cast for consensus upgrade"
                 },
                 "upgrade-no-votes": {
                   "type": "integer",
-                  "description": "No votes cast for consensus upgrade",
-                  "x-go-type": "basics.Round"
+                  "description": "No votes cast for consensus upgrade"
                 },
                 "upgrade-next-protocol-vote-before": {
                   "type": "integer",
                   "description": "Next protocol round",
-                  "x-go-type": "basics.Round"
+                  "x-go-type": "basics.Round",
+                  "x-algokit-bigint": true
                 },
                 "upgrade-vote-rounds": {
                   "type": "integer",
-                  "description": "Total voting rounds for current upgrade",
-                  "x-go-type": "basics.Round"
+                  "description": "Total voting rounds for current upgrade"
                 }
               },
               "description": "NodeStatus contains the information about a node status"
@@ -7153,7 +7123,7 @@
                 "version": {
                   "type": "integer",
                   "description": "The version of this response object.",
-                  "x-algokit-bigint": true
+                  "x-go-type": "uint64"
                 },
                 "last-round": {
                   "type": "integer",
@@ -7224,11 +7194,13 @@
                 "online-money": {
                   "type": "integer",
                   "description": "OnlineMoney",
+                  "x-go-type": "uint64",
                   "x-algokit-bigint": true
                 },
                 "total-money": {
                   "type": "integer",
                   "description": "TotalMoney",
+                  "x-go-type": "uint64",
                   "x-algokit-bigint": true
                 }
               },
@@ -7259,6 +7231,7 @@
                 "fee": {
                   "type": "integer",
                   "description": "Fee is the suggested transaction fee\nFee is in units of micro-Algos per byte.\nFee may fall to zero but transactions must still have a fee of\nat least MinTxnFee for the current network protocol.",
+                  "x-go-type": "uint64",
                   "x-algokit-bigint": true
                 },
                 "genesis-hash": {
@@ -7280,6 +7253,7 @@
                 "min-fee": {
                   "type": "integer",
                   "description": "The minimum transaction fee (not per byte) required for the\ntxn to validate for the current network protocol.",
+                  "x-go-type": "uint64",
                   "x-algokit-bigint": true
                 }
               },
@@ -7470,9 +7444,9 @@
         "description": "Maximum number of results to return.",
         "schema": {
           "type": "integer",
-          "x-algokit-bigint": true
+          "x-go-type": "uint64"
         },
-        "x-algokit-bigint": true
+        "x-go-type": "uint64"
       },
       "max": {
         "name": "max",
@@ -7480,9 +7454,9 @@
         "description": "Truncated number of transactions to display. If max=0, returns all pending txns.",
         "schema": {
           "type": "integer",
-          "x-algokit-bigint": true
+          "x-go-type": "uint64"
         },
-        "x-algokit-bigint": true
+        "x-go-type": "uint64"
       },
       "next": {
         "name": "next",
@@ -7500,9 +7474,11 @@
         "schema": {
           "minimum": 0,
           "type": "integer",
-          "x-go-type": "basics.Round"
+          "x-go-type": "basics.Round",
+          "x-algokit-bigint": true
         },
-        "x-go-type": "basics.Round"
+        "x-go-type": "basics.Round",
+        "x-algokit-bigint": true
       },
       "address": {
         "name": "address",
@@ -7524,9 +7500,11 @@
         "schema": {
           "minimum": 0,
           "type": "integer",
-          "x-go-type": "basics.AssetIndex"
+          "x-go-type": "basics.AssetIndex",
+          "x-algokit-bigint": true
         },
-        "x-go-type": "basics.AssetIndex"
+        "x-go-type": "basics.AssetIndex",
+        "x-algokit-bigint": true
       },
       "application-id": {
         "name": "application-id",
@@ -7536,9 +7514,11 @@
         "schema": {
           "minimum": 0,
           "type": "integer",
-          "x-go-type": "basics.AppIndex"
+          "x-go-type": "basics.AppIndex",
+          "x-algokit-bigint": true
         },
-        "x-go-type": "basics.AppIndex"
+        "x-go-type": "basics.AppIndex",
+        "x-algokit-bigint": true
       },
       "sig-type": {
         "name": "sig-type",

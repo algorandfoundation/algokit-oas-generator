@@ -4,6 +4,7 @@ import { writeFileSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import SwaggerParser from "@apidevtools/swagger-parser";
 import { fileURLToPath } from "node:url";
+import { format } from "node:path";
 
 // ===== TYPES =====
 
@@ -25,7 +26,7 @@ interface VendorExtensionTransform {
   sourceProperty: string; // e.g., "x-algorand-format" or "format"
   sourceValue: string; // e.g., "uint64"
   targetProperty: string; // e.g., "x-algokit-bigint"
-  targetValue: boolean; // value to set
+  targetValue: boolean | string; // value to set
   removeSource?: boolean; // whether to remove the source property (default false)
 }
 
@@ -37,6 +38,7 @@ interface RequiredFieldTransform {
 
 interface FieldTransform {
   fieldName: string; // e.g., "action"
+  schemaName?: string; // Optional: specific schema name to target, e.g., "TealKeyValue"
   removeItems?: string[]; // properties to remove from the target property, e.g., ["format"]
   addItems?: Record<string, any>; // properties to add to the target property, e.g., {"x-custom": true}
 }
@@ -216,7 +218,11 @@ function fixFieldNaming(spec: OpenAPISpec): number {
   // Properties that should be renamed for better developer experience
   const fieldRenames = [
     { from: "application-index", to: "app_id" },
+    { from: "app-index", to: "app_id" },
+    { from: "created-application-index", to: "created_app_id" },
     { from: "asset-index", to: "asset_id" },
+    { from: "created-asset-index", to: "created_asset_id" },
+    { from: "blockTxids", to: "block_tx_ids" },
   ];
 
   const processObject = (obj: any): void => {
@@ -302,12 +308,14 @@ function fixBigInt(spec: OpenAPISpec): number {
     { fieldName: "fee" },
     { fieldName: "min-fee" },
     { fieldName: "round" },
+    { fieldName: "round-number" },
+    { fieldName: "min-round" },
+    { fieldName: "max-round" },
     { fieldName: "last-round" },
     { fieldName: "confirmed-round" },
     { fieldName: "asset-id" },
     { fieldName: "created-application-index" },
     { fieldName: "created-asset-index" },
-    { fieldName: "txn-index" },
     { fieldName: "application-index" },
     { fieldName: "asset-index" },
     { fieldName: "current_round" },
@@ -321,7 +329,7 @@ function fixBigInt(spec: OpenAPISpec): number {
     { fieldName: "index", excludedModels: ["LightBlockHeaderProof"] },
     { fieldName: "last-proposed" },
     { fieldName: "last-heartbeat" },
-    { fieldName: "application-index" },
+    { fieldName: "application-id" },
     { fieldName: "min-balance" },
     { fieldName: "amount-without-pending-rewards" },
     { fieldName: "pending-rewards" },
@@ -332,6 +340,24 @@ function fixBigInt(spec: OpenAPISpec): number {
     { fieldName: "vote-last-valid" },
     { fieldName: "catchup-time" },
     { fieldName: "time-since-last-round" },
+    { fieldName: "currency-greater-than" },
+    { fieldName: "currency-less-than" },
+    { fieldName: "rewards-calculation-round" },
+    { fieldName: "rewards-level" },
+    { fieldName: "rewards-rate" },
+    { fieldName: "rewards-residue" },
+    { fieldName: "next-protocol-switch-on" },
+    { fieldName: "next-protocol-vote-before" },
+    { fieldName: "upgrade-delay" },
+    { fieldName: "app" },
+    { fieldName: "asset" },
+    { fieldName: "current-round" },
+    { fieldName: "application-id" },
+    { fieldName: "online-total-weight" },
+    { fieldName: "close-amount" },
+    { fieldName: "close-rewards" },
+    { fieldName: "receiver-rewards" },
+    { fieldName: "sender-rewards" },
   ];
 
   const processObject = (obj: any, objName?: string): void => {
@@ -350,6 +376,18 @@ function fixBigInt(spec: OpenAPISpec): number {
           if (propDef && typeof propDef === "object" && propDef.type === "integer" && !propDef["x-algokit-bigint"]) {
             if (bigIntFields.findIndex((f) => f.fieldName === propName && (!objName || !f.excludedModels?.includes(objName))) > -1) {
               propDef["x-algokit-bigint"] = true;
+              fixedCount++;
+            }
+          }
+        }
+      }
+
+      // Check if this is a parameters array (query parameters)
+      if (key === "parameters" && Array.isArray(value)) {
+        for (const param of value) {
+          if (param && typeof param === "object" && param.name && param.schema?.type === "integer" && !param.schema["x-algokit-bigint"]) {
+            if (bigIntFields.findIndex((f) => f.fieldName === param.name && (!objName || !f.excludedModels?.includes(objName))) > -1) {
+              param.schema["x-algokit-bigint"] = true;
               fixedCount++;
             }
           }
@@ -392,6 +430,14 @@ function transformProperties(spec: OpenAPISpec, transforms: FieldTransform[]): n
 
       // Check if current path matches the target property path
       if (fullPath.endsWith(targetPath)) {
+        // If schemaName is specified, check if we're in the correct schema context
+        if (transform.schemaName) {
+          const schemaPath = `components.schemas.${transform.schemaName}.properties.${transform.fieldName}`;
+          if (!fullPath.endsWith(schemaPath)) {
+            continue; // Skip this transform if not in the specified schema
+          }
+        }
+
         // Remove specified items from this property
         if (transform.removeItems) {
           for (const itemToRemove of transform.removeItems) {
@@ -595,7 +641,10 @@ function resolveRef(spec: OpenAPISpec, ref: string): any {
  * Strip APIVn prefix from component schema names and update all $ref usages (KMD-specific)
  * Adds x-algokit-original-name and x-algokit-version metadata for traceability.
  */
-function stripKmdApiVersionPrefixes(spec: OpenAPISpec): { renamed: number; collisions: number } {
+function stripKmdApiVersionPrefixes(spec: OpenAPISpec): {
+  renamed: number;
+  collisions: number;
+} {
   let renamed = 0;
   let collisions = 0;
 
@@ -962,6 +1011,78 @@ async function processAlgodSpec() {
           maximum: 3,
         },
       },
+      {
+        fieldName: "upgrade-votes-required",
+        removeItems: ["x-go-type"],
+      },
+      {
+        fieldName: "upgrade-votes",
+        removeItems: ["x-go-type"],
+      },
+      {
+        fieldName: "upgrade-yes-votes",
+        removeItems: ["x-go-type"],
+      },
+      {
+        fieldName: "upgrade-no-votes",
+        removeItems: ["x-go-type"],
+      },
+      {
+        fieldName: "upgrade-vote-rounds",
+        removeItems: ["x-go-type"],
+      },
+      {
+        fieldName: "type",
+        removeItems: ["x-go-type"],
+      },
+      {
+        fieldName: "decimals",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "total-apps-opted-in",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "total-assets-opted-in",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "total-created-apps",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "total-created-assets",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "apps-total-extra-pages",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "total-boxes",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "total-box-bytes",
+        removeItems: ["format"],
+      },
+      {
+        fieldName: "key",
+        schemaName: "TealKeyValue",
+        addItems: {
+          pattern: "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+          format: "byte",
+        },
+      },
+      {
+        fieldName: "key",
+        schemaName: "EvalDeltaKeyValue",
+        addItems: {
+          pattern: "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+          format: "byte",
+        },
+      },
     ],
     vendorExtensionTransforms: [
       {
@@ -979,18 +1100,39 @@ async function processAlgodSpec() {
         removeSource: false,
       },
       {
-        sourceProperty: "x-go-type",
-        sourceValue: "uint64",
-        targetProperty: "x-algokit-bigint",
-        targetValue: true,
-        removeSource: true,
-      },
-      {
         sourceProperty: "x-algorand-format",
         sourceValue: "SignedTransaction",
         targetProperty: "x-algokit-signed-txn",
         targetValue: true,
         removeSource: true,
+      },
+      {
+        sourceProperty: "x-go-type",
+        sourceValue: "basics.AppIndex",
+        targetProperty: "x-algokit-bigint",
+        targetValue: true,
+        removeSource: false,
+      },
+      {
+        sourceProperty: "x-go-type",
+        sourceValue: "basics.Round",
+        targetProperty: "x-algokit-bigint",
+        targetValue: true,
+        removeSource: false,
+      },
+      {
+        sourceProperty: "x-go-type",
+        sourceValue: "basics.AssetIndex",
+        targetProperty: "x-algokit-bigint",
+        targetValue: true,
+        removeSource: false,
+      },
+      {
+        sourceProperty: "operationId",
+        sourceValue: "GetBlockTxids",
+        targetProperty: "operationId",
+        targetValue: "GetBlockTxIds",
+        removeSource: false,
       },
     ],
     msgpackOnlyEndpoints: [
@@ -1002,6 +1144,7 @@ async function processAlgodSpec() {
       { path: "/v2/deltas/{round}", methods: ["get"] },
       { path: "/v2/deltas/txn/group/{id}", methods: ["get"] },
       { path: "/v2/deltas/{round}/txn/group", methods: ["get"] },
+      { path: "/v2/transactions/simulate", methods: ["post"] },
     ],
     jsonOnlyEndpoints: [
       { path: "/v2/accounts/{address}", methods: ["get"] },
@@ -1054,8 +1197,16 @@ async function processIndexerSpec() {
     sourceUrl: `https://raw.githubusercontent.com/algorand/indexer/${indexerTag}/api/indexer.oas2.json`,
     outputPath: join(process.cwd(), "specs", "indexer.oas3.json"),
     requiredFieldTransforms: [
-      { schemaName: "ApplicationParams", fieldName: "approval-program", makeRequired: false },
-      { schemaName: "ApplicationParams", fieldName: "clear-state-program", makeRequired: false },
+      {
+        schemaName: "ApplicationParams",
+        fieldName: "approval-program",
+        makeRequired: false,
+      },
+      {
+        schemaName: "ApplicationParams",
+        fieldName: "clear-state-program",
+        makeRequired: false,
+      },
     ],
     fieldTransforms: [
       {
@@ -1081,6 +1232,18 @@ async function processIndexerSpec() {
           maximum: 3,
         },
       },
+      {
+        fieldName: "foreign-apps.items",
+        addItems: {
+          "x-algokit-bigint": true,
+        },
+      },
+      {
+        fieldName: "foreign-assets.items",
+        addItems: {
+          "x-algokit-bigint": true,
+        },
+      },
     ],
     vendorExtensionTransforms: [
       {
@@ -1096,13 +1259,6 @@ async function processIndexerSpec() {
         targetProperty: "x-algokit-bigint",
         targetValue: true,
         removeSource: false,
-      },
-      {
-        sourceProperty: "x-go-type",
-        sourceValue: "uint64",
-        targetProperty: "x-algokit-bigint",
-        targetValue: true,
-        removeSource: true,
       },
       {
         sourceProperty: "x-algorand-format",
