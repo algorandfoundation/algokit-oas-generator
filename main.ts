@@ -48,6 +48,18 @@ interface FilterEndpoint {
   methods?: string[]; // HTTP methods to apply to (default: ["get"])
 }
 
+interface FieldRename {
+  from: string; // Original field name
+  to: string; // New field name
+  schemaName?: string; // Optional: specific schema name to target
+}
+
+interface CustomSchema {
+  name: string; // Schema name
+  schema: Record<string, unknown>; // Schema definition object
+  linkToProperties?: string[]; // Optional: property names to update with this schema reference
+}
+
 interface ProcessingConfig {
   sourceUrl: string;
   outputPath: string;
@@ -58,6 +70,7 @@ interface ProcessingConfig {
   fieldTransforms?: FieldTransform[];
   msgpackOnlyEndpoints?: FilterEndpoint[];
   jsonOnlyEndpoints?: FilterEndpoint[];
+  customSchemas?: CustomSchema[];
   // If true, strip APIVn prefixes from component schemas and update refs (KMD)
   stripKmdApiVersionPrefixes?: boolean;
 }
@@ -216,20 +229,40 @@ function fixFieldNaming(spec: OpenAPISpec): number {
   let fixedCount = 0;
 
   // Properties that should be renamed for better developer experience
-  const fieldRenames = [
+  const fieldRenames: FieldRename[] = [
     { from: "application-index", to: "app_id" },
     { from: "app-index", to: "app_id" },
     { from: "created-application-index", to: "created_app_id" },
     { from: "asset-index", to: "asset_id" },
     { from: "created-asset-index", to: "created_asset_id" },
+    { from: "index", to: "id", schemaName: "Asset" },
     { from: "blockTxids", to: "block_tx_ids" },
   ];
 
-  const processObject = (obj: any): void => {
+  const processObject = (obj: any, schemaName?: string): void => {
     if (!obj || typeof obj !== "object") return;
 
     if (Array.isArray(obj)) {
-      obj.forEach((o) => processObject(o));
+      obj.forEach((o) => processObject(o, schemaName));
+      return;
+    }
+
+    // Process schemas and track schema names
+    if (obj.schemas && typeof obj.schemas === "object") {
+      for (const [name, schemaDef] of Object.entries(obj.schemas)) {
+        processObject(schemaDef, name);
+      }
+    }
+
+    // Process responses and track response names
+    if (obj.responses && typeof obj.responses === "object") {
+      for (const [name, responseDef] of Object.entries(obj.responses)) {
+        processObject(responseDef, name);
+      }
+    }
+
+    // If we processed either schemas or responses, return early to avoid double processing
+    if ((obj.schemas && typeof obj.schemas === "object") || (obj.responses && typeof obj.responses === "object")) {
       return;
     }
 
@@ -237,7 +270,16 @@ function fixFieldNaming(spec: OpenAPISpec): number {
     if (obj.properties && typeof obj.properties === "object") {
       for (const [propName, propDef] of Object.entries(obj.properties as Record<string, any>)) {
         if (propDef && typeof propDef === "object") {
-          const rename = fieldRenames.find((r) => r.from === propName);
+          const rename = fieldRenames.find((r) => {
+            // Check if field name matches
+            if (r.from !== propName) return false;
+
+            // If rename has a schema restriction, check if we're in the correct schema
+            if (r.schemaName && r.schemaName !== schemaName) return false;
+
+            return true;
+          });
+
           if (rename) {
             propDef["x-algokit-field-rename"] = rename.to;
             fixedCount++;
@@ -246,10 +288,10 @@ function fixFieldNaming(spec: OpenAPISpec): number {
       }
     }
 
-    // Recursively process nested objects
+    // Recursively process nested objects (preserve schema name context)
     for (const value of Object.values(obj)) {
       if (value && typeof value === "object") {
-        processObject(value);
+        processObject(value, schemaName);
       }
     }
   };
@@ -638,6 +680,70 @@ function resolveRef(spec: OpenAPISpec, ref: string): any {
 }
 
 /**
+ * Create a new custom schema and add it to the OpenAPI spec
+ */
+function createCustomSchema(spec: OpenAPISpec, schemaName: string, schemaDefinition: any): number {
+  let createdCount = 0;
+
+  if (!spec.components) {
+    spec.components = {};
+  }
+  if (!spec.components.schemas) {
+    spec.components.schemas = {};
+  }
+
+  // Only add if it doesn't already exist
+  if (!spec.components.schemas[schemaName]) {
+    spec.components.schemas[schemaName] = schemaDefinition;
+    createdCount++;
+    console.log(`ℹ️  Created new schema: ${schemaName}`);
+  } else {
+    console.warn(`⚠️  Schema ${schemaName} already exists, skipping creation`);
+  }
+
+  return createdCount;
+}
+
+/**
+ * Update property references to use a custom schema
+ */
+function linkSchemaToProperties(spec: OpenAPISpec, propertyName: string, schemaName: string): number {
+  let updatedCount = 0;
+
+  const updatePropertyReferences = (obj: any): void => {
+    if (!obj || typeof obj !== "object") return;
+
+    if (Array.isArray(obj)) {
+      for (const item of obj) updatePropertyReferences(item);
+      return;
+    }
+
+    // Check if this is a properties object containing our target property
+    if (obj.properties && obj.properties[propertyName]) {
+      const property = obj.properties[propertyName];
+
+      // Check if it's currently using an empty object schema or inline schema
+      if (property.type === "object" && (!property.properties || Object.keys(property.properties).length === 0)) {
+        // Replace with schema reference
+        obj.properties[propertyName] = {
+          $ref: `#/components/schemas/${schemaName}`,
+        };
+        updatedCount++;
+        console.log(`ℹ️  Updated ${propertyName} property to reference ${schemaName} schema`);
+      }
+    }
+
+    // Recursively check all object values
+    for (const value of Object.values(obj)) {
+      updatePropertyReferences(value);
+    }
+  };
+
+  updatePropertyReferences(spec);
+  return updatedCount;
+}
+
+/**
  * Strip APIVn prefix from component schema names and update all $ref usages (KMD-specific)
  * Adds x-algokit-original-name and x-algokit-version metadata for traceability.
  */
@@ -896,6 +1002,26 @@ class OpenAPIProcessor {
         console.log(`ℹ️  Enforced json-only format for ${jsonCount} endpoint parameters/responses`);
       }
 
+      // 11. Create custom schemas if configured
+      if (this.config.customSchemas && this.config.customSchemas.length > 0) {
+        let customSchemaCount = 0;
+        let linkedPropertiesCount = 0;
+        for (const customSchema of this.config.customSchemas) {
+          customSchemaCount += createCustomSchema(spec, customSchema.name, customSchema.schema);
+
+          // Link properties to this schema if specified
+          if (customSchema.linkToProperties && customSchema.linkToProperties.length > 0) {
+            for (const propertyName of customSchema.linkToProperties) {
+              linkedPropertiesCount += linkSchemaToProperties(spec, propertyName, customSchema.name);
+            }
+          }
+        }
+        console.log(`ℹ️  Created ${customSchemaCount} custom schemas`);
+        if (linkedPropertiesCount > 0) {
+          console.log(`ℹ️  Linked ${linkedPropertiesCount} properties to custom schemas`);
+        }
+      }
+
       // Save the processed spec
       await SwaggerParser.validate(JSON.parse(JSON.stringify(spec)));
       console.log("✅ Specification is valid");
@@ -982,6 +1108,13 @@ async function processAlgodSpec() {
   const config: ProcessingConfig = {
     sourceUrl: `https://raw.githubusercontent.com/algorand/go-algorand/${stableTag}/daemon/algod/api/algod.oas2.json`,
     outputPath: join(process.cwd(), "specs", "algod.oas3.json"),
+    requiredFieldTransforms: [
+      {
+        schemaName: "Genesis",
+        fieldName: "timestamp",
+        makeRequired: false,
+      },
+    ],
     fieldTransforms: [
       {
         fieldName: "action",
@@ -1083,6 +1216,27 @@ async function processAlgodSpec() {
           format: "byte",
         },
       },
+      {
+        fieldName: "bytes",
+        schemaName: "AvmValue",
+        addItems: {
+          format: "byte",
+        },
+      },
+      {
+        fieldName: "bytes",
+        schemaName: "EvalDelta",
+        addItems: {
+          pattern: "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+          format: "byte",
+        },
+      },
+      {
+        fieldName: "address",
+        addItems: {
+          "x-algorand-format": "Address",
+        },
+      },
     ],
     vendorExtensionTransforms: [
       {
@@ -1150,6 +1304,40 @@ async function processAlgodSpec() {
       { path: "/v2/accounts/{address}", methods: ["get"] },
       { path: "/v2/accounts/{address}/assets/{asset-id}", methods: ["get"] },
     ],
+    customSchemas: [
+      {
+        name: "SourceMap",
+        schema: {
+          type: "object",
+          required: ["version", "sources", "names", "mappings"],
+          properties: {
+            version: {
+              type: "integer",
+            },
+            sources: {
+              description: 'A list of original sources used by the "mappings" entry.',
+              type: "array",
+              items: {
+                type: "string",
+              },
+            },
+            names: {
+              description: 'A list of symbol names used by the "mappings" entry.',
+              type: "array",
+              items: {
+                type: "string",
+              },
+            },
+            mappings: {
+              description: "A string with the encoded mapping data.",
+              type: "string",
+            },
+          },
+          description: "Source map for the program",
+        },
+        linkToProperties: ["sourcemap"],
+      },
+    ],
   };
 
   await processAlgorandSpec(config);
@@ -1180,6 +1368,13 @@ async function processKmdSpec() {
         sourceValue: "uint64",
         targetProperty: "x-algokit-bigint",
         targetValue: true,
+        removeSource: false,
+      },
+      {
+        sourceProperty: "operationId",
+        sourceValue: "ListMultisg",
+        targetProperty: "operationId",
+        targetValue: "ListMultisig",
         removeSource: false,
       },
     ],
@@ -1265,6 +1460,13 @@ async function processIndexerSpec() {
         sourceValue: "SignedTransaction",
         targetProperty: "x-algokit-signed-txn",
         targetValue: true,
+        removeSource: true,
+      },
+      {
+        sourceProperty: "x-algorand-foramt",
+        sourceValue: "uint64",
+        targetProperty: "x-algorand-format",
+        targetValue: "uint64",
         removeSource: true,
       },
     ],

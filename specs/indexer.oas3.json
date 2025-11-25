@@ -3587,6 +3587,7 @@
           "index": {
             "type": "integer",
             "description": "unique asset identifier",
+            "x-algokit-field-rename": "id",
             "x-algokit-bigint": true
           },
           "deleted": {
@@ -4982,7 +4983,7 @@
           },
           "merkle-array-index": {
             "type": "integer",
-            "x-algorand-foramt": "uint64"
+            "x-algorand-format": "uint64"
           },
           "proof": {
             "$ref": "#/components/schemas/MerkleArrayProof"
