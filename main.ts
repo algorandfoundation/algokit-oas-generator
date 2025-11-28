@@ -75,6 +75,47 @@ interface ProcessingConfig {
   stripKmdApiVersionPrefixes?: boolean;
 }
 
+// ===== OAS2 PRE-PROCESSING =====
+
+interface OAS2Spec {
+  swagger?: string;
+  definitions?: Record<string, any>;
+  responses?: Record<string, any>;
+  parameters?: Record<string, any>;
+  [key: string]: any;
+}
+
+/**
+ * Pre-process OAS2 spec to move inline schemas to definitions.
+ * This ensures the swagger converter preserves schema $refs instead of inlining them.
+ */
+export function extractInlineSchemas(spec: OAS2Spec): void {
+  if (!spec.swagger) return;
+
+  if (!spec.definitions) spec.definitions = {};
+
+  if (spec.responses) {
+    for (const [name, response] of Object.entries(spec.responses)) {
+      if (response?.schema && !response.schema.$ref) {
+        spec.definitions[name] = response.schema;
+        response.schema = { $ref: `#/definitions/${name}` };
+        console.log(`ℹ️  Extracted response schema: ${name}`);
+      }
+    }
+  }
+
+  if (spec.parameters) {
+    for (const [name, param] of Object.entries(spec.parameters as Record<string, any>)) {
+      if (param?.schema && !param.schema.$ref) {
+        const schemaName = `${name}Body`;
+        spec.definitions[schemaName] = param.schema;
+        param.schema = { $ref: `#/definitions/${schemaName}` };
+        console.log(`ℹ️  Extracted parameter schema: ${schemaName}`);
+      }
+    }
+  }
+}
+
 // ===== TRANSFORMATIONS =====
 
 // Known missing descriptions to auto-fix
@@ -924,6 +965,9 @@ class OpenAPIProcessor {
 
       // Fetch and parse the spec
       let spec = await this.fetchSpec();
+
+      // Pre-process OAS2 to prevent swagger converter from inlining response schemas
+      extractInlineSchemas(spec as OAS2Spec);
 
       // Convert to OpenAPI 3.0 if needed
       spec = await this.convertToOpenAPI3(spec);
