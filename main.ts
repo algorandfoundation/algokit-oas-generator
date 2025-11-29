@@ -1332,6 +1332,20 @@ async function processAlgodSpec() {
         targetValue: "GetBlockTxIds",
         removeSource: false,
       },
+      {
+        sourceProperty: "operationId",
+        sourceValue: "SimulateTransaction",
+        targetProperty: "operationId",
+        targetValue: "SimulateTransactions",
+        removeSource: false,
+      },
+      {
+        sourceProperty: "operationId",
+        sourceValue: "WaitForBlock",
+        targetProperty: "operationId",
+        targetValue: "StatusAfterBlock",
+        removeSource: false,
+      },
     ],
     msgpackOnlyEndpoints: [
       // Align with Go and JS SDKs that hardcode these to msgpack
