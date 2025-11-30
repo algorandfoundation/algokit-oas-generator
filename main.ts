@@ -264,7 +264,7 @@ function transformVendorExtensions(spec: OpenAPISpec, transforms: VendorExtensio
 }
 
 /**
- * Fix field naming - Add field rename extensions for better Rust ergonomics
+ * Fix field naming - Add field rename extensions for better ergonomics
  */
 function fixFieldNaming(spec: OpenAPISpec): number {
   let fixedCount = 0;
@@ -498,30 +498,54 @@ function transformProperties(spec: OpenAPISpec, transforms: FieldTransform[]): n
     return transformedCount;
   }
 
-  const processObject = (obj: any, currentPath: string[] = []): void => {
+  const processObject = (obj: any, currentPath: string[] = [], parent: any = null): void => {
     if (!obj || typeof obj !== "object") return;
 
     if (Array.isArray(obj)) {
-      obj.forEach((item, index) => processObject(item, [...currentPath, index.toString()]));
+      obj.forEach((item, index) => processObject(item, [...currentPath, index.toString()], obj));
       return;
     }
 
     // Check each configured transformation
     for (const transform of transforms) {
-      const targetPath = `properties.${transform.fieldName}`;
       const fullPath = currentPath.join(".");
 
-      // Check if current path matches the target property path
-      if (fullPath.endsWith(targetPath)) {
+      // Handle dot-notation in fieldName (e.g., "account-id.schema" or "foreign-assets.items")
+      const fieldParts = transform.fieldName.split(".");
+      const baseName = fieldParts[0];
+
+      // Build possible match patterns
+      const targetPath = `properties.${transform.fieldName}`;
+      const parameterPath = `components.parameters.${transform.fieldName}`;
+
+      // Check if current path matches the target property path or parameter path
+      const isPropertyMatch = fullPath.endsWith(targetPath);
+      const isParameterMatch = fullPath.endsWith(parameterPath);
+
+      // Check if this is an inline parameter with matching name
+      let isInlineParameterMatch = false;
+      if (fieldParts.length === 1 && obj.name === baseName) {
+        // Simple case: the object itself has name="account-id"
+        isInlineParameterMatch = true;
+      } else if (fieldParts.length === 2 && parent && parent.name === baseName) {
+        // Nested case: parent has name="account-id" and we're at the nested property (e.g., "schema")
+        const lastPathPart = currentPath[currentPath.length - 1];
+        if (lastPathPart === fieldParts[1]) {
+          isInlineParameterMatch = true;
+        }
+      }
+
+      if (isPropertyMatch || isParameterMatch || isInlineParameterMatch) {
         // If schemaName is specified, check if we're in the correct schema context
-        if (transform.schemaName) {
+        // (only applies to properties, not parameters)
+        if (transform.schemaName && isPropertyMatch) {
           const schemaPath = `components.schemas.${transform.schemaName}.properties.${transform.fieldName}`;
           if (!fullPath.endsWith(schemaPath)) {
             continue; // Skip this transform if not in the specified schema
           }
         }
 
-        // Remove specified items from this property
+        // Remove specified items from this property/parameter
         if (transform.removeItems) {
           for (const itemToRemove of transform.removeItems) {
             if (obj.hasOwnProperty(itemToRemove)) {
@@ -531,7 +555,7 @@ function transformProperties(spec: OpenAPISpec, transforms: FieldTransform[]): n
           }
         }
 
-        // Add specified items to this property
+        // Add specified items to this property/parameter
         if (transform.addItems) {
           for (const [key, value] of Object.entries(transform.addItems)) {
             obj[key] = value;
@@ -544,7 +568,7 @@ function transformProperties(spec: OpenAPISpec, transforms: FieldTransform[]): n
     // Recursively process nested objects
     for (const [key, value] of Object.entries(obj)) {
       if (value && typeof value === "object") {
-        processObject(value, [...currentPath, key]);
+        processObject(value, [...currentPath, key], obj);
       }
     }
   };
@@ -1504,6 +1528,18 @@ async function processIndexerSpec() {
           "x-algokit-bigint": true,
         },
       },
+      {
+        fieldName: "account-id.schema",
+        addItems: {
+          "x-algorand-format": "Address",
+        },
+      },
+      {
+        fieldName: "account-id",
+        addItems: {
+          "x-algokit-field-rename": "account",
+        },
+      },
     ],
     vendorExtensionTransforms: [
       {
@@ -1538,7 +1574,7 @@ async function processIndexerSpec() {
         sourceProperty: "operationId",
         sourceValue: "lookupTransaction",
         targetProperty: "operationId",
-        targetValue: "lookupTransactionById",
+        targetValue: "lookupTransactionByID",
         removeSource: false,
       },
     ],
