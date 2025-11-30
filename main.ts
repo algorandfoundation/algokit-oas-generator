@@ -1346,6 +1346,13 @@ async function processAlgodSpec() {
         targetValue: "StatusAfterBlock",
         removeSource: false,
       },
+      {
+        sourceProperty: "x-go-type",
+        sourceValue: "basics.Address",
+        targetProperty: "x-algorand-format",
+        targetValue: "Address",
+        removeSource: false,
+      },
     ],
     msgpackOnlyEndpoints: [
       // Align with Go and JS SDKs that hardcode these to msgpack
@@ -1526,6 +1533,13 @@ async function processIndexerSpec() {
         targetProperty: "x-algorand-format",
         targetValue: "uint64",
         removeSource: true,
+      },
+      {
+        sourceProperty: "operationId",
+        sourceValue: "lookupTransaction",
+        targetProperty: "operationId",
+        targetValue: "lookupTransactionById",
+        removeSource: false,
       },
     ],
   };

@@ -1945,7 +1945,7 @@
           "lookup"
         ],
         "description": "Lookup a single transaction.",
-        "operationId": "lookupTransaction",
+        "operationId": "lookupTransactionById",
         "parameters": [
           {
             "name": "txid",
