@@ -1305,6 +1305,18 @@ async function processAlgodSpec() {
           "x-algorand-format": "Address",
         },
       },
+      {
+        fieldName: "txid",
+        addItems: {
+          "x-algokit-field-rename": "txId",
+        },
+      },
+      {
+        fieldName: "tx-id",
+        addItems: {
+          "x-algokit-field-rename": "txId",
+        },
+      },
     ],
     vendorExtensionTransforms: [
       {
@@ -1538,6 +1550,12 @@ async function processIndexerSpec() {
         fieldName: "account-id",
         addItems: {
           "x-algokit-field-rename": "account",
+        },
+      },
+      {
+        fieldName: "txid",
+        addItems: {
+          "x-algokit-field-rename": "txId",
         },
       },
     ],

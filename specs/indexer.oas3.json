@@ -762,7 +762,8 @@
             "description": "Lookup the specific transaction by ID.",
             "schema": {
               "type": "string"
-            }
+            },
+            "x-algokit-field-rename": "txId"
           },
           {
             "name": "round",
@@ -1218,7 +1219,8 @@
             "description": "Lookup the specific transaction by ID.",
             "schema": {
               "type": "string"
-            }
+            },
+            "x-algokit-field-rename": "txId"
           },
           {
             "name": "min-round",
@@ -1597,7 +1599,8 @@
             "description": "Lookup the specific transaction by ID.",
             "schema": {
               "type": "string"
-            }
+            },
+            "x-algokit-field-rename": "txId"
           },
           {
             "name": "round",
@@ -1965,7 +1968,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "x-algokit-field-rename": "txId"
           }
         ],
         "responses": {
@@ -2092,7 +2096,8 @@
             "description": "Lookup the specific transaction by ID.",
             "schema": {
               "type": "string"
-            }
+            },
+            "x-algokit-field-rename": "txId"
           },
           {
             "name": "round",
@@ -2669,7 +2674,8 @@
         "properties": {
           "txid": {
             "type": "string",
-            "description": "Transaction ID"
+            "description": "Transaction ID",
+            "x-algokit-field-rename": "txId"
           },
           "logs": {
             "type": "array",
@@ -5007,7 +5013,8 @@
         "description": "Lookup the specific transaction by ID.",
         "schema": {
           "type": "string"
-        }
+        },
+        "x-algokit-field-rename": "txId"
       },
       "tx-type": {
         "name": "tx-type",

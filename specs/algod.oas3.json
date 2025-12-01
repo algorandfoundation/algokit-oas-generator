@@ -1047,7 +1047,8 @@
             "schema": {
               "pattern": "[A-Z0-9]+",
               "type": "string"
-            }
+            },
+            "x-algokit-field-rename": "txId"
           },
           {
             "name": "hashtype",
@@ -2319,7 +2320,8 @@
             "schema": {
               "pattern": "[A-Z0-9]+",
               "type": "string"
-            }
+            },
+            "x-algokit-field-rename": "txId"
           },
           {
             "name": "format",
@@ -6984,7 +6986,8 @@
           "x-go-name": "TxID"
         },
         "x-algorand-format": "Address",
-        "x-go-name": "TxID"
+        "x-go-name": "TxID",
+        "x-algokit-field-rename": "txId"
       },
       "tx-type": {
         "name": "tx-type",
