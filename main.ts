@@ -1462,6 +1462,12 @@ async function processKmdSpec() {
           "x-algokit-bytes-base64": true,
         },
       },
+      {
+        fieldName: "wallet_driver_name",
+        addItems: {
+          default: "sqlite",
+        },
+      },
     ],
     vendorExtensionTransforms: [
       {
