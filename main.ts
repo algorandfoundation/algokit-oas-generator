@@ -32,7 +32,7 @@ interface VendorExtensionTransform {
 
 interface RequiredFieldTransform {
   schemaName: string; // e.g., "ApplicationParams" - The OpenAPI schema name
-  fieldName: string; // e.g., "approval-program" - The field name to transform
+  fieldName: string | string[]; // e.g., "approval-program" or ["approval-program", "clear-state-program"] - The field name(s) to transform
   makeRequired: boolean; // true = add to required array, false = remove from required array
 }
 
@@ -60,6 +60,16 @@ interface CustomSchema {
   linkToProperties?: string[]; // Optional: property names to update with this schema reference
 }
 
+interface SchemaRename {
+  from: string; // Original schema name
+  to: string; // New schema name
+}
+
+interface SchemaFieldRename {
+  schemaName: string; // Schema name to target
+  fieldRenames: { from: string; to: string }[]; // Field renames to apply
+}
+
 interface ProcessingConfig {
   sourceUrl: string;
   outputPath: string;
@@ -71,8 +81,14 @@ interface ProcessingConfig {
   msgpackOnlyEndpoints?: FilterEndpoint[];
   jsonOnlyEndpoints?: FilterEndpoint[];
   customSchemas?: CustomSchema[];
-  // If true, strip APIVn prefixes from component schemas and update refs (KMD)
-  stripKmdApiVersionPrefixes?: boolean;
+  // Schema renames to apply
+  schemaRenames?: SchemaRename[];
+  // Schema field renames to apply (actual field name changes)
+  schemaFieldRenames?: SchemaFieldRename[];
+  // Field names to remove from all schemas (e.g., ["error", "message"])
+  removeSchemaFields?: string[];
+  // Make all properties required in all schemas
+  makeAllFieldsRequired?: boolean;
 }
 
 // ===== OAS2 PRE-PROCESSING =====
@@ -598,33 +614,38 @@ function transformRequiredFields(spec: OpenAPISpec, requiredFieldTransforms: Req
       continue;
     }
 
+    // Normalize fieldName to an array for consistent processing
+    const fieldNames = Array.isArray(config.fieldName) ? config.fieldName : [config.fieldName];
+
     // Initialize required array if it doesn't exist and we're making a field required
     if (config.makeRequired && !schema.required) {
       schema.required = [];
     }
 
-    if (config.makeRequired) {
-      // Make field required: add to required array if not already present
-      if (!schema.required.includes(config.fieldName)) {
-        schema.required.push(config.fieldName);
-        transformedCount++;
-        console.log(`ℹ️  Made ${config.fieldName} required in ${config.schemaName}`);
-      }
-    } else {
-      // Make field optional: remove from required array
-      if (schema.required && Array.isArray(schema.required)) {
-        const originalLength = schema.required.length;
-        schema.required = schema.required.filter((field: string) => field !== config.fieldName);
-
-        // If the required array is now empty, remove it entirely
-        if (schema.required.length === 0) {
-          delete schema.required;
+    for (const fieldName of fieldNames) {
+      if (config.makeRequired) {
+        // Make field required: add to required array if not already present
+        if (!schema.required.includes(fieldName)) {
+          schema.required.push(fieldName);
+          transformedCount++;
+          console.log(`ℹ️  Made ${fieldName} required in ${config.schemaName}`);
         }
+      } else {
+        // Make field optional: remove from required array
+        if (schema.required && Array.isArray(schema.required)) {
+          const originalLength = schema.required.length;
+          schema.required = schema.required.filter((field: string) => field !== fieldName);
 
-        const removedCount = originalLength - (schema.required?.length || 0);
-        if (removedCount > 0) {
-          transformedCount += removedCount;
-          console.log(`ℹ️  Made ${config.fieldName} optional in ${config.schemaName}`);
+          // If the required array is now empty, remove it entirely
+          if (schema.required.length === 0) {
+            delete schema.required;
+          }
+
+          const removedCount = originalLength - (schema.required?.length || 0);
+          if (removedCount > 0) {
+            transformedCount += removedCount;
+            console.log(`ℹ️  Made ${fieldName} optional in ${config.schemaName}`);
+          }
         }
       }
     }
@@ -809,55 +830,44 @@ function linkSchemaToProperties(spec: OpenAPISpec, propertyName: string, schemaN
 }
 
 /**
- * Strip APIVn prefix from component schema names and update all $ref usages (KMD-specific)
- * Adds x-algokit-original-name and x-algokit-version metadata for traceability.
+ * Rename component schemas and update all $ref usages according to configuration.
+ * Adds x-algokit-original-name metadata for traceability.
  */
-function stripKmdApiVersionPrefixes(spec: OpenAPISpec): {
-  renamed: number;
-  collisions: number;
-} {
+function renameSchemas(spec: OpenAPISpec, renames: SchemaRename[]): number {
   let renamed = 0;
-  let collisions = 0;
 
   const components = spec.components;
-  if (!components || !components.schemas) {
-    return { renamed, collisions };
+  if (!components || !components.schemas || !renames?.length) {
+    return renamed;
   }
 
   const schemas = components.schemas as Record<string, any>;
   const oldToNewName: Record<string, string> = {};
   const newSchemas: Record<string, any> = {};
 
-  const versionPrefix = /^APIV(\d+)(.+)$/; // e.g., APIV1DELETEMultisigResponse
+  // Build rename map from configuration
+  const renameMap = new Map(renames.map((r) => [r.from, r]));
 
   // 1) Build rename map and new schemas object
   for (const [name, schema] of Object.entries(schemas)) {
-    const match = name.match(versionPrefix);
-    if (!match) {
-      if (newSchemas[name]) {
-        collisions++;
-        newSchemas[`${name}__DUP`] = schema;
-      } else {
-        newSchemas[name] = schema;
-      }
+    const renameConfig = renameMap.get(name);
+
+    if (!renameConfig) {
+      // No rename configured, keep as-is
+      newSchemas[name] = schema;
       continue;
     }
 
-    const version = Number(match[1]);
-    const base = match[2]; // e.g., DELETEMultisigResponse
-    let target = base;
-
-    // Avoid collisions: if target already exists, suffix with V<version>
-    if (newSchemas[target] || Object.values(oldToNewName).includes(target)) {
-      target = `${base}V${version}`;
-      collisions++;
-    }
-
-    // Record mapping and add metadata (in case in future new versions of the spec are added)
+    const target = renameConfig.to;
     oldToNewName[name] = target;
     const schemaCopy = { ...(schema as any) };
     schemaCopy["x-algokit-original-name"] = name;
-    schemaCopy["x-algokit-kmd-api-version"] = version;
+
+    // Update description
+    if (schemaCopy.description && typeof schemaCopy.description === "string") {
+      schemaCopy.description = schemaCopy.description.replace(new RegExp(name, "g"), target).replace(/\nfriendly:.+$/, "");
+    }
+
     newSchemas[target] = schemaCopy;
     renamed++;
   }
@@ -866,7 +876,7 @@ function stripKmdApiVersionPrefixes(spec: OpenAPISpec): {
   components.schemas = newSchemas as any;
 
   if (renamed === 0) {
-    return { renamed, collisions };
+    return renamed;
   }
 
   // 2) Update all $ref occurrences pointing to old schema names
@@ -890,7 +900,225 @@ function stripKmdApiVersionPrefixes(spec: OpenAPISpec): {
 
   updateRefs(spec);
 
-  return { renamed, collisions };
+  return renamed;
+}
+
+/**
+ * Rename fields within schemas (actual field name changes, not just metadata)
+ */
+function renameSchemaFields(spec: OpenAPISpec, fieldRenames: SchemaFieldRename[]): number {
+  let renamedCount = 0;
+
+  if (!spec.components?.schemas || !fieldRenames || fieldRenames.length === 0) {
+    return renamedCount;
+  }
+
+  const schemas = spec.components.schemas as Record<string, any>;
+
+  for (const config of fieldRenames) {
+    const schema = schemas[config.schemaName];
+
+    if (!schema || typeof schema !== "object" || !schema.properties) {
+      console.warn(`⚠️  Schema '${config.schemaName}' not found or has no properties, skipping field renames`);
+      continue;
+    }
+
+    for (const rename of config.fieldRenames) {
+      if (!schema.properties.hasOwnProperty(rename.from)) {
+        console.warn(`⚠️  Field '${rename.from}' not found in schema '${config.schemaName}', skipping rename`);
+        continue;
+      }
+
+      // Rename the field
+      schema.properties[rename.to] = schema.properties[rename.from];
+      delete schema.properties[rename.from];
+
+      // Update required array if it exists
+      if (schema.required && Array.isArray(schema.required)) {
+        const index = schema.required.indexOf(rename.from);
+        if (index !== -1) {
+          schema.required[index] = rename.to;
+        }
+      }
+
+      renamedCount++;
+      console.log(`ℹ️  Renamed field '${rename.from}' to '${rename.to}' in schema '${config.schemaName}'`);
+    }
+  }
+
+  return renamedCount;
+}
+
+/**
+ * Remove specified fields from all schemas in the spec
+ */
+function removeSchemaFields(spec: OpenAPISpec, fieldsToRemove: string[]): number {
+  let removedCount = 0;
+
+  if (!spec.components?.schemas || !fieldsToRemove || fieldsToRemove.length === 0) {
+    return removedCount;
+  }
+
+  const schemas = spec.components.schemas as Record<string, any>;
+
+  for (const [schemaName, schema] of Object.entries(schemas)) {
+    if (!schema || typeof schema !== "object" || !schema.properties) {
+      continue;
+    }
+
+    for (const fieldName of fieldsToRemove) {
+      if (schema.properties.hasOwnProperty(fieldName)) {
+        delete schema.properties[fieldName];
+        removedCount++;
+        console.log(`ℹ️  Removed field '${fieldName}' from schema '${schemaName}'`);
+      }
+    }
+  }
+
+  return removedCount;
+}
+
+/**
+ * Make all properties required in all schemas
+ */
+function makeAllFieldsRequired(spec: OpenAPISpec): number {
+  let modifiedCount = 0;
+
+  if (!spec.components?.schemas) {
+    return modifiedCount;
+  }
+
+  const schemas = spec.components.schemas as Record<string, any>;
+
+  for (const [schemaName, schema] of Object.entries(schemas)) {
+    if (!schema || typeof schema !== "object" || !schema.properties) {
+      continue;
+    }
+
+    const propertyNames = Object.keys(schema.properties);
+
+    if (propertyNames.length === 0) {
+      continue;
+    }
+
+    // Initialize required array if it doesn't exist
+    if (!schema.required) {
+      schema.required = [];
+    }
+
+    // Add all properties to required array if not already present
+    let addedCount = 0;
+    for (const propertyName of propertyNames) {
+      if (!schema.required.includes(propertyName)) {
+        schema.required.push(propertyName);
+        addedCount++;
+      }
+    }
+
+    if (addedCount > 0) {
+      modifiedCount += addedCount;
+      console.log(`ℹ️  Made ${addedCount} field(s) required in schema '${schemaName}'`);
+    }
+  }
+
+  return modifiedCount;
+}
+
+/**
+ * Remove schemas that have no properties and update all references to them
+ */
+function removeEmptySchemas(spec: OpenAPISpec): { removedSchemas: number; updatedReferences: number } {
+  let removedSchemas = 0;
+  let updatedReferences = 0;
+
+  if (!spec.components?.schemas) {
+    return { removedSchemas, updatedReferences };
+  }
+
+  const schemas = spec.components.schemas as Record<string, any>;
+  const emptySchemasToRemove: string[] = [];
+
+  // Find schemas with empty properties
+  for (const [schemaName, schema] of Object.entries(schemas)) {
+    if (
+      schema &&
+      typeof schema === "object" &&
+      schema.properties &&
+      typeof schema.properties === "object" &&
+      Object.keys(schema.properties).length === 0
+    ) {
+      emptySchemasToRemove.push(schemaName);
+      console.log(`ℹ️  Found empty schema: ${schemaName}`);
+    }
+  }
+
+  if (emptySchemasToRemove.length === 0) {
+    return { removedSchemas, updatedReferences };
+  }
+
+  // Function to recursively find and replace schema references
+  const replaceSchemaReferences = (obj: any, parent: any = null, parentKey: string = ""): void => {
+    if (!obj || typeof obj !== "object") return;
+
+    if (Array.isArray(obj)) {
+      obj.forEach((item, index) => replaceSchemaReferences(item, obj, index.toString()));
+      return;
+    }
+
+    // Check if this is a "content" object that contains a reference to an empty schema
+    if (parentKey === "content" && obj && typeof obj === "object") {
+      // Check each media type in the content object
+      for (const [mediaType, mediaTypeObj] of Object.entries(obj)) {
+        if (
+          mediaTypeObj &&
+          typeof mediaTypeObj === "object" &&
+          (mediaTypeObj as any).schema &&
+          typeof (mediaTypeObj as any).schema === "object"
+        ) {
+          const schema = (mediaTypeObj as any).schema;
+          if (schema.$ref && typeof schema.$ref === "string") {
+            const refMatch = schema.$ref.match(/^#\/components\/schemas\/(.+)$/);
+            if (refMatch && emptySchemasToRemove.includes(refMatch[1])) {
+              // This references an empty schema, replace the entire content object with {}
+              if (parent && parent[parentKey]) {
+                parent[parentKey] = {};
+                updatedReferences++;
+                console.log(`ℹ️  Replaced content object referencing empty schema '${refMatch[1]}' with {}`);
+                return; // Don't process further since we replaced the whole content object
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Recursively process nested objects
+    for (const [key, value] of Object.entries(obj)) {
+      if (value && typeof value === "object") {
+        replaceSchemaReferences(value, obj, key);
+      }
+    }
+  };
+
+  // Process all paths to find and replace references
+  if (spec.paths) {
+    replaceSchemaReferences(spec.paths);
+  }
+
+  // Process all components to find and replace references (except schemas themselves)
+  if (spec.components) {
+    const { schemas: _, ...otherComponents } = spec.components;
+    replaceSchemaReferences(otherComponents);
+  }
+
+  // Remove the empty schemas
+  for (const schemaName of emptySchemasToRemove) {
+    delete schemas[schemaName];
+    removedSchemas++;
+    console.log(`ℹ️  Removed empty schema: ${schemaName}`);
+  }
+
+  return { removedSchemas, updatedReferences };
 }
 
 // ===== MAIN PROCESSOR =====
@@ -906,6 +1134,27 @@ class OpenAPIProcessor {
       ["ana ccount", "an account"],
       ["since eposh", "since epoch"],
       ["* update\\n* update\\n* delete", "* update\\n* delete"],
+      ["APIV1POSTWalletRenameRequest is the", "The"],
+      ["APIV1POSTWalletRequest is the", "The"],
+      ["APIV1DELETEKeyRequest is the", "The"],
+      ["APIV1DELETEMultisigRequest is the", "The"],
+      ["APIV1POSTKeyExportRequest is the", "The"],
+      ["APIV1POSTMasterKeyExportRequest is the", "The"],
+      ["APIV1POSTMultisigExportRequest is the", "The"],
+      ["APIV1POSTKeyRequest is the", "The"],
+      ["APIV1POSTKeyImportRequest is the", "The"],
+      ["APIV1POSTMultisigImportRequest is the", "The"],
+      ["APIV1POSTWalletInitRequest is the", "The"],
+      ["APIV1POSTKeyListRequest is the", "The"],
+      ["APIV1POSTMultisigListRequest is the", "The"],
+      ["APIV1POSTWalletReleaseRequest is the", "The"],
+      ["APIV1POSTWalletRenameRequest is the", "The"],
+      ["APIV1POSTWalletRenewRequest is the", "The"],
+      ["APIV1POSTMultisigTransactionSignRequest is the", "The"],
+      ["APIV1POSTProgramSignRequest is the", "The"],
+      ["APIV1POSTTransactionSignRequest is the", "The"],
+      ["APIV1POSTWalletInfoRequest is the", "The"],
+      ["APIV1POSTMultisigProgramSignRequest is the", "The"],
     ];
 
     return patches.reduce((text, [find, replace]) => text.replaceAll(find, replace), content);
@@ -1001,49 +1250,73 @@ class OpenAPIProcessor {
 
       // Apply transformations
       console.log("ℹ️  Applying transformations...");
-      // 0. KMD-only: strip APIVn prefixes before other transforms if requested
-      if (this.config.stripKmdApiVersionPrefixes) {
-        const { renamed, collisions } = stripKmdApiVersionPrefixes(spec);
+      // Rename schemas if configured (e.g., strip APIVn prefixes from KMD)
+      if (this.config.schemaRenames && this.config.schemaRenames.length > 0) {
+        const renamed = renameSchemas(spec, this.config.schemaRenames);
         if (renamed > 0) {
-          console.log(`ℹ️  Stripped APIVn prefix from ${renamed} schemas (collisions resolved: ${collisions})`);
+          console.log(`ℹ️  Renamed ${renamed} schemas`);
         }
       }
 
-      // 1. Fix missing descriptions
+      // Rename schema fields if configured (e.g., MultisigSig field names in KMD)
+      if (this.config.schemaFieldRenames && this.config.schemaFieldRenames.length > 0) {
+        const renamedCount = renameSchemaFields(spec, this.config.schemaFieldRenames);
+        console.log(`ℹ️  Renamed ${renamedCount} fields in schemas`);
+      }
+
+      // Remove specified schema fields if configured (KMD error/message cleanup)
+      if (this.config.removeSchemaFields && this.config.removeSchemaFields.length > 0) {
+        const removedCount = removeSchemaFields(spec, this.config.removeSchemaFields);
+        console.log(`ℹ️  Removed ${removedCount} fields from schemas`);
+
+        // After removing properties, check for and remove schemas that now have no properties
+        const { removedSchemas, updatedReferences } = removeEmptySchemas(spec);
+        if (removedSchemas > 0) {
+          console.log(`ℹ️  Removed ${removedSchemas} empty schemas and updated ${updatedReferences} references`);
+        }
+      }
+
+      // Fix missing descriptions
       const descriptionCount = fixMissingDescriptions(spec);
       console.log(`ℹ️  Fixed ${descriptionCount} missing descriptions`);
 
-      // 2. Fix pydantic recursion error
+      // Fix pydantic recursion error
       const pydanticCount = fixPydanticRecursionError(spec);
       console.log(`ℹ️  Fixed ${pydanticCount} pydantic recursion errors`);
 
-      // 3. Fix field naming
+      // Fix field naming
       const fieldNamingCount = fixFieldNaming(spec);
       console.log(`ℹ️  Added field rename extensions to ${fieldNamingCount} properties`);
 
-      // 4. Fix TealValue bytes fields
+      // Fix TealValue bytes fields
       const tealValueCount = fixTealValueBytes(spec);
       console.log(`ℹ️  Added bytes base64 extensions to ${tealValueCount} TealValue.bytes properties`);
 
-      // 5. Fix bigint properties
+      // Fix bigint properties
       const bigIntCount = fixBigInt(spec);
       console.log(`ℹ️  Added x-algokit-bigint to ${bigIntCount} properties`);
 
-      // 6. Transform required fields if configured
+      // Make all fields required if configured
+      if (this.config.makeAllFieldsRequired) {
+        const madeRequiredCount = makeAllFieldsRequired(spec);
+        console.log(`ℹ️  Made ${madeRequiredCount} fields required across all schemas`);
+      }
+
+      // Transform required fields if configured
       let transformedFieldsCount = 0;
       if (this.config.requiredFieldTransforms && this.config.requiredFieldTransforms.length > 0) {
         transformedFieldsCount = transformRequiredFields(spec, this.config.requiredFieldTransforms);
         console.log(`ℹ️  Transformed ${transformedFieldsCount} required field states`);
       }
 
-      // 7. Transform properties if configured
+      // Transform properties if configured
       let transformedPropertiesCount = 0;
       if (this.config.fieldTransforms && this.config.fieldTransforms.length > 0) {
         transformedPropertiesCount = transformProperties(spec, this.config.fieldTransforms);
         console.log(`ℹ️  Applied ${transformedPropertiesCount} property transformations (additions/removals)`);
       }
 
-      // 8. Transform vendor extensions if configured
+      // Transform vendor extensions if configured
       if (this.config.vendorExtensionTransforms && this.config.vendorExtensionTransforms.length > 0) {
         const transformCounts = transformVendorExtensions(spec, this.config.vendorExtensionTransforms);
 
@@ -1058,19 +1331,19 @@ class OpenAPIProcessor {
         }
       }
 
-      // 9. Enforce msgpack-only endpoints if configured
+      // Enforce msgpack-only endpoints if configured
       if (this.config.msgpackOnlyEndpoints && this.config.msgpackOnlyEndpoints.length > 0) {
         const msgpackCount = enforceEndpointFormat(spec, this.config.msgpackOnlyEndpoints, "msgpack");
         console.log(`ℹ️  Enforced msgpack-only format for ${msgpackCount} endpoint parameters/responses`);
       }
 
-      // 10. Enforce json-only endpoints if configured
+      // Enforce json-only endpoints if configured
       if (this.config.jsonOnlyEndpoints && this.config.jsonOnlyEndpoints.length > 0) {
         const jsonCount = enforceEndpointFormat(spec, this.config.jsonOnlyEndpoints, "json");
         console.log(`ℹ️  Enforced json-only format for ${jsonCount} endpoint parameters/responses`);
       }
 
-      // 11. Create custom schemas if configured
+      // Create custom schemas if configured
       if (this.config.customSchemas && this.config.customSchemas.length > 0) {
         let customSchemaCount = 0;
         let linkedPropertiesCount = 0;
@@ -1452,7 +1725,105 @@ async function processKmdSpec() {
   const config: ProcessingConfig = {
     sourceUrl: `https://raw.githubusercontent.com/algorand/go-algorand/${stableTag}/daemon/kmd/api/swagger.json`,
     outputPath: join(process.cwd(), "specs", "kmd.oas3.json"),
-    stripKmdApiVersionPrefixes: true,
+    schemaRenames: [
+      { from: "APIV1DELETEKeyResponse", to: "DeleteKeyResponse" },
+      { from: "APIV1DELETEMultisigResponse", to: "DeleteMultisigResponse" },
+      { from: "APIV1GETWalletsResponse", to: "ListWalletsResponse" },
+      { from: "APIV1POSTKeyExportResponse", to: "ExportKeyResponse" },
+      { from: "APIV1POSTKeyImportResponse", to: "ImportKeyResponse" },
+      { from: "APIV1POSTKeyListResponse", to: "ListKeysResponse" },
+      { from: "APIV1POSTKeyResponse", to: "GenerateKeyResponse" },
+      { from: "APIV1POSTMasterKeyExportResponse", to: "ExportMasterKeyResponse" },
+      { from: "APIV1POSTMultisigExportResponse", to: "ExportMultisigResponse" },
+      { from: "APIV1POSTMultisigImportResponse", to: "ImportMultisigResponse" },
+      { from: "APIV1POSTMultisigListResponse", to: "ListMultisigResponse" },
+      { from: "APIV1POSTMultisigProgramSignResponse", to: "SignProgramMultisigResponse" },
+      { from: "APIV1POSTMultisigTransactionSignResponse", to: "SignMultisigResponse" },
+      { from: "APIV1POSTProgramSignResponse", to: "SignProgramResponse" },
+      { from: "APIV1POSTTransactionSignResponse", to: "SignTransactionResponse" },
+      { from: "APIV1POSTWalletInfoResponse", to: "WalletInfoResponse" },
+      { from: "APIV1POSTWalletInitResponse", to: "InitWalletHandleTokenResponse" },
+      { from: "APIV1POSTWalletReleaseResponse", to: "ReleaseWalletHandleTokenResponse" },
+      { from: "APIV1POSTWalletRenameResponse", to: "RenameWalletResponse" },
+      { from: "APIV1POSTWalletRenewResponse", to: "RenewWalletHandleTokenResponse" },
+      { from: "APIV1POSTWalletResponse", to: "CreateWalletResponse" },
+      { from: "APIV1Wallet", to: "Wallet" },
+      { from: "APIV1WalletHandle", to: "WalletHandle" },
+      // These are renamed, so we can use the original name for a customised type
+      { from: "SignMultisigRequest", to: "SignMultisigTxnRequest" },
+      { from: "SignTransactionRequest", to: "SignTxnRequest" },
+    ],
+    schemaFieldRenames: [
+      {
+        schemaName: "MultisigSig",
+        fieldRenames: [
+          { from: "Subsigs", to: "subsig" },
+          { from: "Threshold", to: "thr" },
+          { from: "Version", to: "v" },
+        ],
+      },
+      {
+        schemaName: "MultisigSubsig",
+        fieldRenames: [
+          { from: "Key", to: "pk" },
+          { from: "Sig", to: "s" },
+        ],
+      },
+    ],
+    removeSchemaFields: ["error", "message", "display_mnemonic"],
+    makeAllFieldsRequired: true,
+    requiredFieldTransforms: [
+      {
+        schemaName: "CreateWalletRequest",
+        fieldName: ["master_derivation_key", "wallet_driver_name"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "SignTxnRequest",
+        fieldName: ["wallet_password", "public_key"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "SignProgramMultisigRequest",
+        fieldName: ["wallet_password", "partial_multisig", "use_legacy_msig"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "SignMultisigTxnRequest",
+        fieldName: ["wallet_password", "partial_multisig", "signer"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "DeleteKeyRequest",
+        fieldName: ["wallet_password"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "DeleteMultisigRequest",
+        fieldName: ["wallet_password"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "ExportKeyRequest",
+        fieldName: ["wallet_password"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "ExportMasterKeyRequest",
+        fieldName: ["wallet_password"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "SignProgramRequest",
+        fieldName: ["wallet_password"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "MultisigSubsig",
+        fieldName: ["s"], // TODO: NC - Confirm if this is correct
+        makeRequired: false,
+      },
+    ],
     fieldTransforms: [
       {
         fieldName: "private_key",
@@ -1460,6 +1831,67 @@ async function processKmdSpec() {
         addItems: {
           type: "string",
           "x-algokit-bytes-base64": true,
+        },
+      },
+      {
+        schemaName: "MultisigSig",
+        fieldName: "subsig",
+        addItems: {
+          "x-algokit-field-rename": "subsignatures",
+        },
+      },
+      {
+        schemaName: "MultisigSig",
+        fieldName: "thr",
+        addItems: {
+          "x-algokit-field-rename": "threshold",
+        },
+      },
+      {
+        schemaName: "MultisigSig",
+        fieldName: "v",
+        addItems: {
+          "x-algokit-field-rename": "version",
+        },
+      },
+      {
+        schemaName: "MultisigSubsig",
+        fieldName: "pk",
+        addItems: {
+          "x-algokit-field-rename": "publicKey",
+        },
+      },
+      {
+        schemaName: "MultisigSubsig",
+        fieldName: "s",
+        addItems: {
+          "x-algokit-field-rename": "signature",
+        },
+      },
+      {
+        schemaName: "SignProgramRequest",
+        fieldName: "data",
+        addItems: {
+          "x-algokit-field-rename": "program",
+        },
+      },
+      {
+        schemaName: "SignProgramMultisigRequest",
+        fieldName: "data",
+        addItems: {
+          "x-algokit-field-rename": "program",
+        },
+      },
+      {
+        fieldName: "addresses.items",
+        addItems: {
+          "x-algorand-format": "Address",
+        },
+      },
+      {
+        fieldName: "pks",
+        addItems: {
+          "x-algokit-field-rename": "publicKeys",
         },
       },
       {
@@ -1482,6 +1914,20 @@ async function processKmdSpec() {
         sourceValue: "ListMultisg",
         targetProperty: "operationId",
         targetValue: "ListMultisig",
+        removeSource: false,
+      },
+      {
+        sourceProperty: "operationId",
+        sourceValue: "InitWalletHandleToken",
+        targetProperty: "operationId",
+        targetValue: "InitWalletHandle",
+        removeSource: false,
+      },
+      {
+        sourceProperty: "x-go-name",
+        sourceValue: "Address",
+        targetProperty: "x-algorand-format",
+        targetValue: "Address",
         removeSource: false,
       },
     ],
