@@ -1894,6 +1894,12 @@ async function processKmdSpec() {
           "x-algokit-field-rename": "publicKeys",
         },
       },
+      {
+        fieldName: "wallet_driver_name",
+        addItems: {
+          default: "sqlite",
+        },
+      },
     ],
     vendorExtensionTransforms: [
       {
