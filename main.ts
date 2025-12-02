@@ -65,6 +65,11 @@ interface SchemaRename {
   to: string; // New schema name
 }
 
+interface SchemaFieldRename {
+  schemaName: string; // Schema name to target
+  fieldRenames: { from: string; to: string }[]; // Field renames to apply
+}
+
 interface ProcessingConfig {
   sourceUrl: string;
   outputPath: string;
@@ -78,8 +83,10 @@ interface ProcessingConfig {
   customSchemas?: CustomSchema[];
   // Schema renames to apply
   schemaRenames?: SchemaRename[];
-  // Property names to remove from all schemas (e.g., ["error", "message"])
-  removeSchemaProperties?: string[];
+  // Schema field renames to apply (actual field name changes)
+  schemaFieldRenames?: SchemaFieldRename[];
+  // Field names to remove from all schemas (e.g., ["error", "message"])
+  removeSchemaFields?: string[];
   // Make all properties required in all schemas
   makeAllFieldsRequired?: boolean;
 }
@@ -897,12 +904,58 @@ function renameSchemas(spec: OpenAPISpec, renames: SchemaRename[]): number {
 }
 
 /**
- * Remove specified properties from all schemas in the spec
+ * Rename fields within schemas (actual field name changes, not just metadata)
  */
-function removeSchemaProperties(spec: OpenAPISpec, propertiesToRemove: string[]): number {
+function renameSchemaFields(spec: OpenAPISpec, fieldRenames: SchemaFieldRename[]): number {
+  let renamedCount = 0;
+
+  if (!spec.components?.schemas || !fieldRenames || fieldRenames.length === 0) {
+    return renamedCount;
+  }
+
+  const schemas = spec.components.schemas as Record<string, any>;
+
+  for (const config of fieldRenames) {
+    const schema = schemas[config.schemaName];
+
+    if (!schema || typeof schema !== "object" || !schema.properties) {
+      console.warn(`⚠️  Schema '${config.schemaName}' not found or has no properties, skipping field renames`);
+      continue;
+    }
+
+    for (const rename of config.fieldRenames) {
+      if (!schema.properties.hasOwnProperty(rename.from)) {
+        console.warn(`⚠️  Field '${rename.from}' not found in schema '${config.schemaName}', skipping rename`);
+        continue;
+      }
+
+      // Rename the field
+      schema.properties[rename.to] = schema.properties[rename.from];
+      delete schema.properties[rename.from];
+
+      // Update required array if it exists
+      if (schema.required && Array.isArray(schema.required)) {
+        const index = schema.required.indexOf(rename.from);
+        if (index !== -1) {
+          schema.required[index] = rename.to;
+        }
+      }
+
+      renamedCount++;
+      console.log(`ℹ️  Renamed field '${rename.from}' to '${rename.to}' in schema '${config.schemaName}'`);
+    }
+  }
+
+  return renamedCount;
+}
+
+/**
+ * Remove specified fields from all schemas in the spec
+ */
+function removeSchemaFields(spec: OpenAPISpec, fieldsToRemove: string[]): number {
   let removedCount = 0;
 
-  if (!spec.components?.schemas || !propertiesToRemove || propertiesToRemove.length === 0) {
+  if (!spec.components?.schemas || !fieldsToRemove || fieldsToRemove.length === 0) {
     return removedCount;
   }
 
@@ -913,11 +966,11 @@ function removeSchemaProperties(spec: OpenAPISpec, propertiesToRemove: string[])
       continue;
     }
 
-    for (const propertyName of propertiesToRemove) {
-      if (schema.properties.hasOwnProperty(propertyName)) {
-        delete schema.properties[propertyName];
+    for (const fieldName of fieldsToRemove) {
+      if (schema.properties.hasOwnProperty(fieldName)) {
+        delete schema.properties[fieldName];
         removedCount++;
-        console.log(`ℹ️  Removed property '${propertyName}' from schema '${schemaName}'`);
+        console.log(`ℹ️  Removed field '${fieldName}' from schema '${schemaName}'`);
       }
     }
   }
@@ -1081,6 +1134,27 @@ class OpenAPIProcessor {
       ["ana ccount", "an account"],
       ["since eposh", "since epoch"],
       ["* update\\n* update\\n* delete", "* update\\n* delete"],
+      ["APIV1POSTWalletRenameRequest is the", "The"],
+      ["APIV1POSTWalletRequest is the", "The"],
+      ["APIV1DELETEKeyRequest is the", "The"],
+      ["APIV1DELETEMultisigRequest is the", "The"],
+      ["APIV1POSTKeyExportRequest is the", "The"],
+      ["APIV1POSTMasterKeyExportRequest is the", "The"],
+      ["APIV1POSTMultisigExportRequest is the", "The"],
+      ["APIV1POSTKeyRequest is the", "The"],
+      ["APIV1POSTKeyImportRequest is the", "The"],
+      ["APIV1POSTMultisigImportRequest is the", "The"],
+      ["APIV1POSTWalletInitRequest is the", "The"],
+      ["APIV1POSTKeyListRequest is the", "The"],
+      ["APIV1POSTMultisigListRequest is the", "The"],
+      ["APIV1POSTWalletReleaseRequest is the", "The"],
+      ["APIV1POSTWalletRenameRequest is the", "The"],
+      ["APIV1POSTWalletRenewRequest is the", "The"],
+      ["APIV1POSTMultisigTransactionSignRequest is the", "The"],
+      ["APIV1POSTProgramSignRequest is the", "The"],
+      ["APIV1POSTTransactionSignRequest is the", "The"],
+      ["APIV1POSTWalletInfoRequest is the", "The"],
+      ["APIV1POSTMultisigProgramSignRequest is the", "The"],
     ];
 
     return patches.reduce((text, [find, replace]) => text.replaceAll(find, replace), content);
@@ -1184,10 +1258,16 @@ class OpenAPIProcessor {
         }
       }
 
-      // Remove specified schema properties if configured (KMD error/message cleanup)
-      if (this.config.removeSchemaProperties && this.config.removeSchemaProperties.length > 0) {
-        const removedCount = removeSchemaProperties(spec, this.config.removeSchemaProperties);
-        console.log(`ℹ️  Removed ${removedCount} properties from schemas`);
+      // Rename schema fields if configured (e.g., MultisigSig field names in KMD)
+      if (this.config.schemaFieldRenames && this.config.schemaFieldRenames.length > 0) {
+        const renamedCount = renameSchemaFields(spec, this.config.schemaFieldRenames);
+        console.log(`ℹ️  Renamed ${renamedCount} fields in schemas`);
+      }
+
+      // Remove specified schema fields if configured (KMD error/message cleanup)
+      if (this.config.removeSchemaFields && this.config.removeSchemaFields.length > 0) {
+        const removedCount = removeSchemaFields(spec, this.config.removeSchemaFields);
+        console.log(`ℹ️  Removed ${removedCount} fields from schemas`);
 
         // After removing properties, check for and remove schemas that now have no properties
         const { removedSchemas, updatedReferences } = removeEmptySchemas(spec);
@@ -1669,13 +1749,78 @@ async function processKmdSpec() {
       { from: "APIV1POSTWalletResponse", to: "CreateWalletResponse" },
       { from: "APIV1Wallet", to: "Wallet" },
       { from: "APIV1WalletHandle", to: "WalletHandle" },
+      // These are renamed, so we can use the original name for a customised type
+      { from: "SignMultisigRequest", to: "SignMultisigTxnRequest" },
+      { from: "SignTransactionRequest", to: "SignTxnRequest" },
     ],
-    removeSchemaProperties: ["error", "message", "display_mnemonic"],
+    schemaFieldRenames: [
+      {
+        schemaName: "MultisigSig",
+        fieldRenames: [
+          { from: "Subsigs", to: "subsig" },
+          { from: "Threshold", to: "thr" },
+          { from: "Version", to: "v" },
+        ],
+      },
+      {
+        schemaName: "MultisigSubsig",
+        fieldRenames: [
+          { from: "Key", to: "pk" },
+          { from: "Sig", to: "s" },
+        ],
+      },
+    ],
+    removeSchemaFields: ["error", "message", "display_mnemonic"],
     makeAllFieldsRequired: true,
     requiredFieldTransforms: [
       {
         schemaName: "CreateWalletRequest",
         fieldName: ["master_derivation_key", "wallet_driver_name"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "SignTxnRequest",
+        fieldName: ["wallet_password", "public_key"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "SignProgramMultisigRequest",
+        fieldName: ["wallet_password", "partial_multisig", "use_legacy_msig"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "SignMultisigTxnRequest",
+        fieldName: ["wallet_password", "partial_multisig", "signer"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "DeleteKeyRequest",
+        fieldName: ["wallet_password"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "DeleteMultisigRequest",
+        fieldName: ["wallet_password"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "ExportKeyRequest",
+        fieldName: ["wallet_password"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "ExportMasterKeyRequest",
+        fieldName: ["wallet_password"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "SignProgramRequest",
+        fieldName: ["wallet_password"],
+        makeRequired: false,
+      },
+      {
+        schemaName: "MultisigSubsig",
+        fieldName: ["s"], // TODO: NC - Confirm if this is correct
         makeRequired: false,
       },
     ],
@@ -1686,6 +1831,67 @@ async function processKmdSpec() {
         addItems: {
           type: "string",
           "x-algokit-bytes-base64": true,
+        },
+      },
+      {
+        schemaName: "MultisigSig",
+        fieldName: "subsig",
+        addItems: {
+          "x-algokit-field-rename": "subsignatures",
+        },
+      },
+      {
+        schemaName: "MultisigSig",
+        fieldName: "thr",
+        addItems: {
+          "x-algokit-field-rename": "threshold",
+        },
+      },
+      {
+        schemaName: "MultisigSig",
+        fieldName: "v",
+        addItems: {
+          "x-algokit-field-rename": "version",
+        },
+      },
+      {
+        schemaName: "MultisigSubsig",
+        fieldName: "pk",
+        addItems: {
+          "x-algokit-field-rename": "publicKey",
+        },
+      },
+      {
+        schemaName: "MultisigSubsig",
+        fieldName: "s",
+        addItems: {
+          "x-algokit-field-rename": "signature",
+        },
+      },
+      {
+        schemaName: "SignProgramRequest",
+        fieldName: "data",
+        addItems: {
+          "x-algokit-field-rename": "program",
+        },
+      },
+      {
+        schemaName: "SignProgramMultisigRequest",
+        fieldName: "data",
+        addItems: {
+          "x-algokit-field-rename": "program",
+        },
+      },
+      {
+        fieldName: "addresses.items",
+        addItems: {
+          "x-algorand-format": "Address",
+        },
+      },
+      {
+        fieldName: "pks",
+        addItems: {
+          "x-algokit-field-rename": "publicKeys",
         },
       },
     ],
@@ -1709,6 +1915,13 @@ async function processKmdSpec() {
         sourceValue: "InitWalletHandleToken",
         targetProperty: "operationId",
         targetValue: "InitWalletHandle",
+        removeSource: false,
+      },
+      {
+        sourceProperty: "x-go-name",
+        sourceValue: "Address",
+        targetProperty: "x-algorand-format",
+        targetValue: "Address",
         removeSource: false,
       },
     ],

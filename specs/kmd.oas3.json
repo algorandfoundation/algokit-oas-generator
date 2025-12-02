@@ -337,7 +337,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SignMultisigRequest"
+                "$ref": "#/components/schemas/SignMultisigTxnRequest"
               }
             }
           },
@@ -427,7 +427,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SignTransactionRequest"
+                "$ref": "#/components/schemas/SignTxnRequest"
               }
             }
           },
@@ -722,7 +722,8 @@
         "properties": {
           "address": {
             "type": "string",
-            "x-go-name": "Address"
+            "x-go-name": "Address",
+            "x-algorand-format": "Address"
           }
         },
         "description": "ImportKeyResponse is the response to `POST /v1/key/import`",
@@ -738,7 +739,8 @@
           "addresses": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "x-algorand-format": "Address"
             },
             "x-go-name": "Addresses"
           }
@@ -755,7 +757,8 @@
         "properties": {
           "address": {
             "type": "string",
-            "x-go-name": "Address"
+            "x-go-name": "Address",
+            "x-algorand-format": "Address"
           }
         },
         "description": "GenerateKeyResponse is the response to `POST /v1/key`",
@@ -792,7 +795,8 @@
             "items": {
               "$ref": "#/components/schemas/PublicKey"
             },
-            "x-go-name": "PKs"
+            "x-go-name": "PKs",
+            "x-algokit-field-rename": "publicKeys"
           },
           "threshold": {
             "type": "integer",
@@ -814,7 +818,8 @@
         "properties": {
           "address": {
             "type": "string",
-            "x-go-name": "Address"
+            "x-go-name": "Address",
+            "x-algorand-format": "Address"
           }
         },
         "description": "ImportMultisigResponse is the response to `POST /v1/multisig/import`",
@@ -830,7 +835,8 @@
           "addresses": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "x-algorand-format": "Address"
             },
             "x-go-name": "Addresses"
           }
@@ -1064,7 +1070,7 @@
             "x-go-name": "WalletPassword"
           }
         },
-        "description": "APIV1POSTWalletRequest is the request for `POST /v1/wallet`",
+        "description": "The request for `POST /v1/wallet`",
         "x-go-name": "APIV1POSTWalletRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
@@ -1077,7 +1083,8 @@
         "properties": {
           "address": {
             "type": "string",
-            "x-go-name": "Address"
+            "x-go-name": "Address",
+            "x-algorand-format": "Address"
           },
           "wallet_handle_token": {
             "type": "string",
@@ -1088,13 +1095,12 @@
             "x-go-name": "WalletPassword"
           }
         },
-        "description": "APIV1DELETEKeyRequest is the request for `DELETE /v1/key`",
+        "description": "The request for `DELETE /v1/key`",
         "x-go-name": "APIV1DELETEKeyRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
           "address",
-          "wallet_handle_token",
-          "wallet_password"
+          "wallet_handle_token"
         ]
       },
       "DeleteMultisigRequest": {
@@ -1102,7 +1108,8 @@
         "properties": {
           "address": {
             "type": "string",
-            "x-go-name": "Address"
+            "x-go-name": "Address",
+            "x-algorand-format": "Address"
           },
           "wallet_handle_token": {
             "type": "string",
@@ -1113,13 +1120,12 @@
             "x-go-name": "WalletPassword"
           }
         },
-        "description": "APIV1DELETEMultisigRequest is the request for `DELETE /v1/multisig`",
+        "description": "The request for `DELETE /v1/multisig`",
         "x-go-name": "APIV1DELETEMultisigRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
           "address",
-          "wallet_handle_token",
-          "wallet_password"
+          "wallet_handle_token"
         ]
       },
       "Digest": {
@@ -1136,7 +1142,8 @@
         "properties": {
           "address": {
             "type": "string",
-            "x-go-name": "Address"
+            "x-go-name": "Address",
+            "x-algorand-format": "Address"
           },
           "wallet_handle_token": {
             "type": "string",
@@ -1147,13 +1154,12 @@
             "x-go-name": "WalletPassword"
           }
         },
-        "description": "APIV1POSTKeyExportRequest is the request for `POST /v1/key/export`",
+        "description": "The request for `POST /v1/key/export`",
         "x-go-name": "APIV1POSTKeyExportRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
           "address",
-          "wallet_handle_token",
-          "wallet_password"
+          "wallet_handle_token"
         ]
       },
       "ExportMasterKeyRequest": {
@@ -1168,12 +1174,11 @@
             "x-go-name": "WalletPassword"
           }
         },
-        "description": "APIV1POSTMasterKeyExportRequest is the request for `POST /v1/master-key/export`",
+        "description": "The request for `POST /v1/master-key/export`",
         "x-go-name": "APIV1POSTMasterKeyExportRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
-          "wallet_handle_token",
-          "wallet_password"
+          "wallet_handle_token"
         ]
       },
       "ExportMultisigRequest": {
@@ -1181,14 +1186,15 @@
         "properties": {
           "address": {
             "type": "string",
-            "x-go-name": "Address"
+            "x-go-name": "Address",
+            "x-algorand-format": "Address"
           },
           "wallet_handle_token": {
             "type": "string",
             "x-go-name": "WalletHandleToken"
           }
         },
-        "description": "APIV1POSTMultisigExportRequest is the request for `POST /v1/multisig/export`",
+        "description": "The request for `POST /v1/multisig/export`",
         "x-go-name": "APIV1POSTMultisigExportRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
@@ -1204,7 +1210,7 @@
             "x-go-name": "WalletHandleToken"
           }
         },
-        "description": "APIV1POSTKeyRequest is the request for `POST /v1/key`",
+        "description": "The request for `POST /v1/key`",
         "x-go-name": "APIV1POSTKeyRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
@@ -1223,7 +1229,7 @@
             "x-go-name": "WalletHandleToken"
           }
         },
-        "description": "APIV1POSTKeyImportRequest is the request for `POST /v1/key/import`",
+        "description": "The request for `POST /v1/key/import`",
         "x-go-name": "APIV1POSTKeyImportRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
@@ -1244,7 +1250,8 @@
             "items": {
               "$ref": "#/components/schemas/PublicKey"
             },
-            "x-go-name": "PKs"
+            "x-go-name": "PKs",
+            "x-algokit-field-rename": "publicKeys"
           },
           "threshold": {
             "type": "integer",
@@ -1256,7 +1263,7 @@
             "x-go-name": "WalletHandleToken"
           }
         },
-        "description": "APIV1POSTMultisigImportRequest is the request for `POST /v1/multisig/import`",
+        "description": "The request for `POST /v1/multisig/import`",
         "x-go-name": "APIV1POSTMultisigImportRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
@@ -1278,7 +1285,7 @@
             "x-go-name": "WalletPassword"
           }
         },
-        "description": "APIV1POSTWalletInitRequest is the request for `POST /v1/wallet/init`",
+        "description": "The request for `POST /v1/wallet/init`",
         "x-go-name": "APIV1POSTWalletInitRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
@@ -1294,7 +1301,7 @@
             "x-go-name": "WalletHandleToken"
           }
         },
-        "description": "APIV1POSTKeyListRequest is the request for `POST /v1/key/list`",
+        "description": "The request for `POST /v1/key/list`",
         "x-go-name": "APIV1POSTKeyListRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
@@ -1309,7 +1316,7 @@
             "x-go-name": "WalletHandleToken"
           }
         },
-        "description": "APIV1POSTMultisigListRequest is the request for `POST /v1/multisig/list`",
+        "description": "The request for `POST /v1/multisig/list`",
         "x-go-name": "APIV1POSTMultisigListRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
@@ -1334,44 +1341,48 @@
       "MultisigSig": {
         "type": "object",
         "properties": {
-          "Subsigs": {
+          "subsig": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/MultisigSubsig"
-            }
+            },
+            "x-algokit-field-rename": "subsignatures"
           },
-          "Threshold": {
+          "thr": {
             "type": "integer",
-            "format": "uint8"
+            "format": "uint8",
+            "x-algokit-field-rename": "threshold"
           },
-          "Version": {
+          "v": {
             "type": "integer",
-            "format": "uint8"
+            "format": "uint8",
+            "x-algokit-field-rename": "version"
           }
         },
         "description": "MultisigSig is the structure that holds multiple Subsigs",
         "x-go-package": "github.com/algorand/go-algorand/crypto",
         "required": [
-          "Subsigs",
-          "Threshold",
-          "Version"
+          "subsig",
+          "thr",
+          "v"
         ]
       },
       "MultisigSubsig": {
         "type": "object",
         "properties": {
-          "Key": {
-            "$ref": "#/components/schemas/PublicKey"
+          "pk": {
+            "$ref": "#/components/schemas/PublicKey",
+            "x-algokit-field-rename": "publicKey"
           },
-          "Sig": {
-            "$ref": "#/components/schemas/Signature"
+          "s": {
+            "$ref": "#/components/schemas/Signature",
+            "x-algokit-field-rename": "signature"
           }
         },
         "description": "MultisigSubsig is a struct that holds a pair of public key and signatures\nsignatures may be empty",
         "x-go-package": "github.com/algorand/go-algorand/crypto",
         "required": [
-          "Key",
-          "Sig"
+          "pk"
         ]
       },
       "PrivateKey": {
@@ -1388,7 +1399,7 @@
             "x-go-name": "WalletHandleToken"
           }
         },
-        "description": "APIV1POSTWalletReleaseRequest is the request for `POST /v1/wallet/release`",
+        "description": "The request for `POST /v1/wallet/release`",
         "x-go-name": "APIV1POSTWalletReleaseRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
@@ -1411,7 +1422,7 @@
             "x-go-name": "WalletPassword"
           }
         },
-        "description": "APIV1POSTWalletRenameRequest is the request for `POST /v1/wallet/rename`",
+        "description": "The request for `POST /v1/wallet/rename`",
         "x-go-name": "APIV1POSTWalletRenameRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
@@ -1428,14 +1439,14 @@
             "x-go-name": "WalletHandleToken"
           }
         },
-        "description": "APIV1POSTWalletRenewRequest is the request for `POST /v1/wallet/renew`",
+        "description": "The request for `POST /v1/wallet/renew`",
         "x-go-name": "APIV1POSTWalletRenewRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
           "wallet_handle_token"
         ]
       },
-      "SignMultisigRequest": {
+      "SignMultisigTxnRequest": {
         "type": "object",
         "properties": {
           "partial_multisig": {
@@ -1462,16 +1473,14 @@
             "x-go-name": "WalletPassword"
           }
         },
-        "description": "APIV1POSTMultisigTransactionSignRequest is the request for `POST /v1/multisig/sign`",
+        "description": "The request for `POST /v1/multisig/sign`",
         "x-go-name": "APIV1POSTMultisigTransactionSignRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
+        "x-algokit-original-name": "SignMultisigRequest",
         "required": [
-          "partial_multisig",
           "public_key",
-          "signer",
           "transaction",
-          "wallet_handle_token",
-          "wallet_password"
+          "wallet_handle_token"
         ]
       },
       "SignProgramMultisigRequest": {
@@ -1479,13 +1488,15 @@
         "properties": {
           "address": {
             "type": "string",
-            "x-go-name": "Address"
+            "x-go-name": "Address",
+            "x-algorand-format": "Address"
           },
           "data": {
             "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
             "type": "string",
             "format": "byte",
-            "x-go-name": "Program"
+            "x-go-name": "Program",
+            "x-algokit-field-rename": "program"
           },
           "partial_multisig": {
             "$ref": "#/components/schemas/MultisigSig"
@@ -1506,17 +1517,14 @@
             "x-go-name": "WalletPassword"
           }
         },
-        "description": "APIV1POSTMultisigProgramSignRequest is the request for `POST /v1/multisig/signprogram`",
+        "description": "The request for `POST /v1/multisig/signprogram`",
         "x-go-name": "APIV1POSTMultisigProgramSignRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
           "address",
           "data",
-          "partial_multisig",
           "public_key",
-          "use_legacy_msig",
-          "wallet_handle_token",
-          "wallet_password"
+          "wallet_handle_token"
         ]
       },
       "SignProgramRequest": {
@@ -1524,13 +1532,15 @@
         "properties": {
           "address": {
             "type": "string",
-            "x-go-name": "Address"
+            "x-go-name": "Address",
+            "x-algorand-format": "Address"
           },
           "data": {
             "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
             "type": "string",
             "format": "byte",
-            "x-go-name": "Program"
+            "x-go-name": "Program",
+            "x-algokit-field-rename": "program"
           },
           "wallet_handle_token": {
             "type": "string",
@@ -1541,17 +1551,16 @@
             "x-go-name": "WalletPassword"
           }
         },
-        "description": "APIV1POSTProgramSignRequest is the request for `POST /v1/program/sign`",
+        "description": "The request for `POST /v1/program/sign`",
         "x-go-name": "APIV1POSTProgramSignRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
           "address",
           "data",
-          "wallet_handle_token",
-          "wallet_password"
+          "wallet_handle_token"
         ]
       },
-      "SignTransactionRequest": {
+      "SignTxnRequest": {
         "type": "object",
         "properties": {
           "public_key": {
@@ -1573,14 +1582,13 @@
             "x-go-name": "WalletPassword"
           }
         },
-        "description": "APIV1POSTTransactionSignRequest is the request for `POST /v1/transaction/sign`",
+        "description": "The request for `POST /v1/transaction/sign`",
         "x-go-name": "APIV1POSTTransactionSignRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
+        "x-algokit-original-name": "SignTransactionRequest",
         "required": [
-          "public_key",
           "transaction",
-          "wallet_handle_token",
-          "wallet_password"
+          "wallet_handle_token"
         ]
       },
       "Signature": {
@@ -1621,7 +1629,7 @@
             "x-go-name": "WalletHandleToken"
           }
         },
-        "description": "APIV1POSTWalletInfoRequest is the request for `POST /v1/wallet/info`",
+        "description": "The request for `POST /v1/wallet/info`",
         "x-go-name": "APIV1POSTWalletInfoRequest",
         "x-go-package": "github.com/algorand/go-algorand/daemon/kmd/lib/kmdapi",
         "required": [
