@@ -3759,7 +3759,8 @@
       "post": {
         "tags": [
           "public",
-          "nonparticipating"
+          "nonparticipating",
+          "legacy"
         ],
         "summary": "Provide debugging information for a transaction (or group).",
         "description": "Executes TEAL program(s) in context and returns debugging information about the execution. This endpoint is only enabled when a node's configuration file sets EnableDeveloperAPI to true.",
