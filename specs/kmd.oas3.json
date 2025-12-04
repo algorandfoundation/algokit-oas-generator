@@ -39,7 +39,10 @@
             "description": "Unknown Error",
             "content": {}
           }
-        }
+        },
+        "tags": [
+          "skip"
+        ]
       }
     },
     "/v1/key": {

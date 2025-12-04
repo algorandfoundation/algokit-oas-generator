@@ -1787,8 +1787,11 @@ async function processAlgodSpec() {
       },
     ],
     endpointTagTransforms: [
-      // Mark dryrun endpoint as legacy (superseded by simulate)
-      { path: "/v2/teal/dryrun", methods: ["post"], addTags: ["legacy"] },
+      // Mark dryrun endpoint has been superseded by simulate
+      { path: "/v2/teal/dryrun", methods: ["post"], addTags: ["skip"] },
+      { path: "/metrics", methods: ["get"], addTags: ["skip"] },
+      { path: "/swagger.json", methods: ["get"], addTags: ["skip"] },
+      { path: "/v2/blocks/{round}/logs", methods: ["get"], addTags: ["skip"] },
     ],
   };
 
@@ -2009,6 +2012,7 @@ async function processKmdSpec() {
         removeSource: false,
       },
     ],
+    endpointTagTransforms: [{ path: "/swagger.json", methods: ["get"], addTags: ["skip"] }],
   };
 
   await processAlgorandSpec(config);
