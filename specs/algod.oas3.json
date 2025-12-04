@@ -81,7 +81,8 @@
       "get": {
         "tags": [
           "public",
-          "common"
+          "common",
+          "skip"
         ],
         "summary": "Return metrics about algod functioning.",
         "operationId": "Metrics",
@@ -128,7 +129,8 @@
       "get": {
         "tags": [
           "public",
-          "common"
+          "common",
+          "skip"
         ],
         "summary": "Gets the current swagger spec.",
         "description": "Returns the entire swagger spec in json.",
@@ -1137,7 +1139,8 @@
       "get": {
         "tags": [
           "public",
-          "nonparticipating"
+          "nonparticipating",
+          "skip"
         ],
         "summary": "Get all of the logs from outer and inner app calls in the given round",
         "description": "Get all of the logs from outer and inner app calls in the given round",
@@ -3759,7 +3762,8 @@
       "post": {
         "tags": [
           "public",
-          "nonparticipating"
+          "nonparticipating",
+          "skip"
         ],
         "summary": "Provide debugging information for a transaction (or group).",
         "description": "Executes TEAL program(s) in context and returns debugging information about the execution. This endpoint is only enabled when a node's configuration file sets EnableDeveloperAPI to true.",

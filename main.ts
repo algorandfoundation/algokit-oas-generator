@@ -70,6 +70,13 @@ interface SchemaFieldRename {
   fieldRenames: { from: string; to: string }[]; // Field renames to apply
 }
 
+interface EndpointTagTransform {
+  path: string; // Exact path to match (e.g., "/v2/teal/dryrun")
+  methods?: string[]; // HTTP methods to apply to (default: all methods on the path)
+  addTags?: string[]; // Tags to add to the endpoint
+  removeTags?: string[]; // Tags to remove from the endpoint
+}
+
 interface ProcessingConfig {
   sourceUrl: string;
   outputPath: string;
@@ -89,6 +96,8 @@ interface ProcessingConfig {
   removeSchemaFields?: string[];
   // Make all properties required in all schemas
   makeAllFieldsRequired?: boolean;
+  // Endpoint tag transforms to add/remove tags from specific endpoints
+  endpointTagTransforms?: EndpointTagTransform[];
 }
 
 // ===== OAS2 PRE-PROCESSING =====
@@ -1025,6 +1034,65 @@ function makeAllFieldsRequired(spec: OpenAPISpec): number {
 }
 
 /**
+ * Transform endpoint tags by adding or removing tags from specific endpoints
+ */
+function transformEndpointTags(spec: OpenAPISpec, transforms: EndpointTagTransform[]): number {
+  let modifiedCount = 0;
+
+  if (!spec.paths || !transforms?.length) {
+    return modifiedCount;
+  }
+
+  const allMethods = ["get", "post", "put", "delete", "patch", "head", "options", "trace"];
+
+  for (const transform of transforms) {
+    const pathObj = spec.paths[transform.path];
+    if (!pathObj) {
+      console.warn(`⚠️  Path ${transform.path} not found in spec for tag transform`);
+      continue;
+    }
+
+    const methods = transform.methods || allMethods;
+
+    for (const method of methods) {
+      const operation = pathObj[method];
+      if (!operation) {
+        continue;
+      }
+
+      // Initialize tags array if it doesn't exist
+      if (!operation.tags) {
+        operation.tags = [];
+      }
+
+      // Remove tags if specified
+      if (transform.removeTags && transform.removeTags.length > 0) {
+        const originalLength = operation.tags.length;
+        operation.tags = operation.tags.filter((tag: string) => !transform.removeTags!.includes(tag));
+        const removedCount = originalLength - operation.tags.length;
+        if (removedCount > 0) {
+          modifiedCount += removedCount;
+          console.log(`ℹ️  Removed ${removedCount} tag(s) from ${transform.path} (${method})`);
+        }
+      }
+
+      // Add tags if specified
+      if (transform.addTags && transform.addTags.length > 0) {
+        for (const tag of transform.addTags) {
+          if (!operation.tags.includes(tag)) {
+            operation.tags.push(tag);
+            modifiedCount++;
+            console.log(`ℹ️  Added tag '${tag}' to ${transform.path} (${method})`);
+          }
+        }
+      }
+    }
+  }
+
+  return modifiedCount;
+}
+
+/**
  * Remove schemas that have no properties and update all references to them
  */
 function removeEmptySchemas(spec: OpenAPISpec): { removedSchemas: number; updatedReferences: number } {
@@ -1361,6 +1429,12 @@ class OpenAPIProcessor {
         if (linkedPropertiesCount > 0) {
           console.log(`ℹ️  Linked ${linkedPropertiesCount} properties to custom schemas`);
         }
+      }
+
+      // Transform endpoint tags if configured
+      if (this.config.endpointTagTransforms && this.config.endpointTagTransforms.length > 0) {
+        const tagCount = transformEndpointTags(spec, this.config.endpointTagTransforms);
+        console.log(`ℹ️  Applied ${tagCount} endpoint tag transformations`);
       }
 
       // Save the processed spec
@@ -1712,6 +1786,13 @@ async function processAlgodSpec() {
         linkToProperties: ["sourcemap"],
       },
     ],
+    endpointTagTransforms: [
+      // Mark dryrun endpoint has been superseded by simulate
+      { path: "/v2/teal/dryrun", methods: ["post"], addTags: ["skip"] },
+      { path: "/metrics", methods: ["get"], addTags: ["skip"] },
+      { path: "/swagger.json", methods: ["get"], addTags: ["skip"] },
+      { path: "/v2/blocks/{round}/logs", methods: ["get"], addTags: ["skip"] },
+    ],
   };
 
   await processAlgorandSpec(config);
@@ -1931,6 +2012,7 @@ async function processKmdSpec() {
         removeSource: false,
       },
     ],
+    endpointTagTransforms: [{ path: "/swagger.json", methods: ["get"], addTags: ["skip"] }],
   };
 
   await processAlgorandSpec(config);
