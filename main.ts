@@ -2092,6 +2092,18 @@ async function processIndexerSpec() {
           "x-algokit-field-rename": "txId",
         },
       },
+      {
+        fieldName: "application-args.items",
+        addItems: {
+          format: "byte",
+        },
+      },
+      {
+        fieldName: "args.items",
+        addItems: {
+          format: "byte",
+        },
+      },
     ],
     vendorExtensionTransforms: [
       {

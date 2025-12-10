@@ -3581,7 +3581,8 @@
             "type": "array",
             "description": "\\[apaa\\] transaction specific arguments accessed from the application's approval-program and clear-state-program.",
             "items": {
-              "type": "string"
+              "type": "string",
+              "format": "byte"
             }
           },
           "access": {
@@ -3884,7 +3885,8 @@
             "type": "array",
             "description": "\\[arg\\] Logic arguments, base64 encoded.",
             "items": {
-              "type": "string"
+              "type": "string",
+              "format": "byte"
             }
           },
           "logic": {
