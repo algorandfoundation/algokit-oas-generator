@@ -1576,6 +1576,20 @@ async function processAlgodSpec() {
       },
       {
         fieldName: "num-uint",
+        schemaName: "ApplicationStateSchema",
+        addItems: {
+          "x-algokit-field-rename": "num_uints",
+        },
+      },
+      {
+        fieldName: "num-byte-slice",
+        schemaName: "ApplicationStateSchema",
+        addItems: {
+          "x-algokit-field-rename": "num_byte_slices",
+        },
+      },
+      {
+        fieldName: "num-uint",
         removeItems: ["format"],
         addItems: {
           minimum: 0,
@@ -2099,6 +2113,34 @@ async function processIndexerSpec() {
       },
     ],
     fieldTransforms: [
+      {
+        fieldName: "num-uint",
+        schemaName: "ApplicationStateSchema",
+        addItems: {
+          "x-algokit-field-rename": "num_uints",
+        },
+      },
+      {
+        fieldName: "num-byte-slice",
+        schemaName: "ApplicationStateSchema",
+        addItems: {
+          "x-algokit-field-rename": "num_byte_slices",
+        },
+      },
+      {
+        fieldName: "num-uint",
+        schemaName: "StateSchema",
+        addItems: {
+          "x-algokit-field-rename": "num_uints",
+        },
+      },
+      {
+        fieldName: "num-byte-slice",
+        schemaName: "StateSchema",
+        addItems: {
+          "x-algokit-field-rename": "num_byte_slices",
+        },
+      },
       {
         fieldName: "num-uint",
         removeItems: ["x-algorand-format"],
