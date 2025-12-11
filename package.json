@@ -8,7 +8,9 @@
     "convert-openapi": "tsx main.ts",
     "convert-algod": "tsx main.ts --algod-only",
     "convert-indexer": "tsx main.ts --indexer-only",
-    "convert-kmd": "tsx main.ts --kmd-only"
+    "convert-kmd": "tsx main.ts --kmd-only",
+    "lint": "prettier --check .",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "^11.0.0",
