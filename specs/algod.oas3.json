@@ -4470,7 +4470,8 @@
             "x-algokit-bigint": true
           }
         },
-        "description": "References an asset held by an account."
+        "description": "References an asset held by an account.",
+        "x-algokit-holding-reference": true
       },
       "ApplicationLocalReference": {
         "required": [
@@ -4491,7 +4492,8 @@
             "x-algokit-bigint": true
           }
         },
-        "description": "References an account's local state for an application."
+        "description": "References an account's local state for an application.",
+        "x-algokit-locals-reference": true
       },
       "ApplicationStateSchema": {
         "required": [
@@ -5179,7 +5181,8 @@
             "format": "byte"
           }
         },
-        "description": "References a box of an application."
+        "description": "References a box of an application.",
+        "x-algokit-box-reference": true
       },
       "Version": {
         "title": "Version contains the current algod version.",

@@ -839,6 +839,32 @@ function linkSchemaToProperties(spec: OpenAPISpec, propertyName: string, schemaN
 }
 
 /**
+ * Add vendor extensions to specific schemas
+ */
+function addSchemaVendorExtensions(
+  spec: OpenAPISpec,
+  schemaExtensions: { schemaName: string; extension: string; value: any }[],
+): number {
+  let addedCount = 0;
+
+  if (!spec.components?.schemas) {
+    return addedCount;
+  }
+
+  const schemas = spec.components.schemas as Record<string, any>;
+
+  for (const { schemaName, extension, value } of schemaExtensions) {
+    if (schemas[schemaName]) {
+      schemas[schemaName][extension] = value;
+      addedCount++;
+      console.log(`ℹ️  Added ${extension} to schema ${schemaName}`);
+    }
+  }
+
+  return addedCount;
+}
+
+/**
  * Rename component schemas and update all $ref usages according to configuration.
  * Adds x-algokit-original-name metadata for traceability.
  */
@@ -1431,6 +1457,19 @@ class OpenAPIProcessor {
         }
       }
 
+      // Add vendor extensions to specific schemas (for algod only)
+      if (this.config.sourceUrl.includes("algod")) {
+        const schemaExtensions = [
+          { schemaName: "BoxReference", extension: "x-algokit-box-reference", value: true },
+          { schemaName: "ApplicationLocalReference", extension: "x-algokit-locals-reference", value: true },
+          { schemaName: "AssetHoldingReference", extension: "x-algokit-holding-reference", value: true },
+        ];
+        const extensionCount = addSchemaVendorExtensions(spec, schemaExtensions);
+        if (extensionCount > 0) {
+          console.log(`ℹ️  Added ${extensionCount} vendor extensions to schemas`);
+        }
+      }
+
       // Transform endpoint tags if configured
       if (this.config.endpointTagTransforms && this.config.endpointTagTransforms.length > 0) {
         const tagCount = transformEndpointTags(spec, this.config.endpointTagTransforms);
@@ -1686,6 +1725,27 @@ async function processAlgodSpec() {
         targetProperty: "x-algokit-signed-txn",
         targetValue: true,
         removeSource: true,
+      },
+      {
+        sourceProperty: "title",
+        sourceValue: "BoxReference",
+        targetProperty: "x-algokit-box-reference",
+        targetValue: true,
+        removeSource: false,
+      },
+      {
+        sourceProperty: "title",
+        sourceValue: "ApplicationLocalReference",
+        targetProperty: "x-algokit-locals-reference",
+        targetValue: true,
+        removeSource: false,
+      },
+      {
+        sourceProperty: "title",
+        sourceValue: "AssetHoldingReference",
+        targetProperty: "x-algokit-holding-reference",
+        targetValue: true,
+        removeSource: false,
       },
       {
         sourceProperty: "x-go-type",
@@ -2126,6 +2186,13 @@ async function processIndexerSpec() {
         targetProperty: "x-algokit-signed-txn",
         targetValue: true,
         removeSource: true,
+      },
+      {
+        sourceProperty: "title",
+        sourceValue: "BoxReference",
+        targetProperty: "x-algokit-box-reference",
+        targetValue: true,
+        removeSource: false,
       },
       {
         sourceProperty: "x-algorand-foramt",
