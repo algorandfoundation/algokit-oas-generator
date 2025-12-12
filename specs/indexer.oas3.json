@@ -2494,12 +2494,14 @@
           "num-uint": {
             "type": "integer",
             "description": "number of uints.",
+            "x-algokit-field-rename": "num_uints",
             "minimum": 0,
             "maximum": 64
           },
           "num-byte-slice": {
             "type": "integer",
             "description": "number of byte slices.",
+            "x-algokit-field-rename": "num_byte_slices",
             "minimum": 0,
             "maximum": 64
           }
@@ -3365,12 +3367,14 @@
           "num-uint": {
             "type": "integer",
             "description": "Maximum number of TEAL uints that may be stored in the key/value store.",
+            "x-algokit-field-rename": "num_uints",
             "minimum": 0,
             "maximum": 64
           },
           "num-byte-slice": {
             "type": "integer",
             "description": "Maximum number of TEAL byte slices that may be stored in the key/value store.",
+            "x-algokit-field-rename": "num_byte_slices",
             "minimum": 0,
             "maximum": 64
           }

@@ -69,27 +69,27 @@ The converter processes API specifications through a five-stage pipeline:
 flowchart TD
     Start([User Command]) --> Parse[Parse CLI Args]
     Parse --> FetchVersion{Fetch Latest<br/>Version?}
-    
+
     FetchVersion -->|Yes| GitHub[Query GitHub API]
     FetchVersion -->|No| Version[Use Default]
     GitHub --> Version
-    
+
     Version --> SelectAPI{Select API}
     SelectAPI -->|Algod| ConfigA[Load Algod Config]
     SelectAPI -->|Indexer| ConfigI[Load Indexer Config]
     SelectAPI -->|KMD| ConfigK[Load KMD Config]
-    
+
     ConfigA --> Process[Process Pipeline]
     ConfigI --> Process
     ConfigK --> Process
-    
+
     Process --> Fetch[1. Fetch Spec]
     Fetch --> Convert[2. Convert OAS2→OAS3]
     Convert --> Transform[3. Apply Transformations]
     Transform --> Validate[4. Validate]
     Validate --> Write[5. Write Output]
     Write --> End([Enhanced Spec])
-    
+
     style Start fill:#e1f5ff
     style Process fill:#fff4e1
     style Transform fill:#ffe1f5
@@ -136,7 +136,7 @@ flowchart LR
     T3 --> T4[Transform Fields]
     T4 --> T5[Configure Endpoints]
     T5 --> Output[Enhanced Spec]
-    
+
     style Input fill:#e3f2fd
     style T3 fill:#fff3e0
     style Output fill:#e8f5e9
@@ -145,38 +145,51 @@ flowchart LR
 ### 1. Vendor Extensions
 
 **BigInt Fields** (`x-algokit-bigint: true`)
+
 - Marks fields that require 64-bit integer precision
 - Applied to: `format: "uint64"`, `x-algorand-format: "uint64"`, `x-go-type: "uint64"`
 - Examples: `amount`, `round`, `total-apps-opted-in`
 
 **Signed Transactions** (`x-algokit-signed-txn: true`)
+
 - Identifies SignedTransaction types
 - Applied to: `x-algorand-format: "SignedTransaction"`
 - Enables proper msgpack serialization
 
 **Base64 Bytes** (`x-algokit-bytes-base64: true`)
+
 - Marks binary data encoded as base64 strings
 - Examples: `private_key` in KMD
+
+**Locals Reference** (`x-algokit-locals-reference: true`)
+
+- Marks schemas that reference an account's local state for an application
+- Applied to: `ApplicationLocalReference` schema
+- Enables proper handling of local state references in code generation
 
 ### 2. Field Corrections
 
 **Required Fields**
+
 - Removes incorrect required fields that are actually optional
 - Example: `approval-program` and `clear-state-program` in `ApplicationParams`
 
 **Field Constraints**
+
 - Adds proper min/max values
 - Example: `num-uint` and `num-byte-slice` (0-64 range)
 
 ### 3. Msgpack Endpoint Marking
 
 **Msgpack-Only Endpoints** (Algod)
+
 - Endpoints that only accept/return msgpack:
   - `POST /v2/transactions` - Raw transaction submission
   - `GET /v2/transactions/pending/{txid}` - Pending transaction info
   - `GET /v2/blocks/{round}` - Block retrieval
 
 **JSON-Only Endpoints** (Algod)
+
 - Forces JSON for specific endpoints:
   - `GET /v2/accounts/{address}` - Account information
   - `GET /v2/accounts/{address}/assets/{asset-id}` - Asset holdings
@@ -241,6 +254,7 @@ npm run format
 ## Version Tracking
 
 The converter fetches specs from the latest stable release tags:
+
 - **Algod/KMD**: Latest stable tag from `go-algorand` (format: `v3.x.x-stable`)
 - **Indexer**: Latest tag from `indexer` repository
 
@@ -248,24 +262,228 @@ Generated specs include metadata about their source version in console output.
 
 ## Advanced Configuration
 
-The conversion process is configured in `main.ts` with separate `ProcessingConfig` objects for each API. To customize transformations, edit the configuration objects in the source file.
+This section covers how to edit `config.ts` to customize OpenAPI transformations for Algorand specs.
 
-### Configuration Options
+### Config Structure
 
-- `sourceUrl`: GitHub raw URL for the source spec
-- `outputPath`: Where to write the converted spec
-- `vendorExtensionTransforms`: Vendor extension rules to apply
-- `requiredFieldTransforms`: Required field corrections
-- `fieldTransforms`: Field-level transformations
-- `msgpackOnlyEndpoints`: Endpoints that use msgpack exclusively
-- `jsonOnlyEndpoints`: Endpoints that use JSON exclusively
-- `stripKmdApiVersionPrefixes`: Remove KMD API version prefixes (KMD only)
+Three main config objects in `config.ts`:
+
+- `ALGOD_CONFIG` - Algod API transformations
+- `INDEXER_CONFIG` - Indexer API transformations
+- `KMD_CONFIG` - KMD API transformations
+
+Each config is typed as `ProcessingConfig` (see `types.ts` for full interface).
+
+### ProcessingConfig Fields
+
+| Field                       | Type                         | Description                                                                  |
+| --------------------------- | ---------------------------- | ---------------------------------------------------------------------------- |
+| `sourceUrl`                 | `string`                     | GitHub raw URL for source spec                                               |
+| `outputPath`                | `string`                     | Output file path for converted spec                                          |
+| `vendorExtensionTransforms` | `VendorExtensionTransform[]` | Transform vendor extensions (e.g., `x-algorand-format` → `x-algokit-bigint`) |
+| `requiredFieldTransforms`   | `RequiredFieldTransform[]`   | Add/remove fields from schema `required` arrays                              |
+| `fieldTransforms`           | `FieldTransform[]`           | Add/remove properties on specific fields                                     |
+| `msgpackOnlyEndpoints`      | `FilterEndpoint[]`           | Mark endpoints as msgpack-only                                               |
+| `jsonOnlyEndpoints`         | `FilterEndpoint[]`           | Mark endpoints as JSON-only                                                  |
+| `customSchemas`             | `CustomSchema[]`             | Inject custom schema definitions                                             |
+| `schemaRenames`             | `SchemaRename[]`             | Rename schema objects                                                        |
+| `schemaFieldRenames`        | `SchemaFieldRename[]`        | Rename fields within schemas                                                 |
+| `removeSchemaFields`        | `string[]`                   | Remove specific fields from all schemas                                      |
+| `makeAllFieldsRequired`     | `boolean`                    | Make all schema properties required                                          |
+| `endpointTagTransforms`     | `EndpointTagTransform[]`     | Add/remove tags on endpoints                                                 |
+| `schemaVendorExtensions`    | `SchemaVendorExtension[]`    | Add vendor extensions to schemas                                             |
+
+### Common Configuration Tasks
+
+#### Add a Vendor Extension Transform
+
+Transform source properties to target vendor extensions:
+
+```typescript
+vendorExtensionTransforms: [
+  {
+    sourceProperty: "x-algorand-format",
+    sourceValue: "uint64",
+    targetProperty: "x-algokit-bigint",
+    targetValue: true,
+    removeSource: true, // Remove x-algorand-format after transform
+  },
+];
+```
+
+#### Add a Field Rename
+
+Rename fields across all schemas or within specific schemas:
+
+```typescript
+fieldTransforms: [
+  {
+    fieldName: "num-uint",
+    schemaName: "ApplicationStateSchema", // Optional: target specific schema
+    addItems: {
+      "x-algokit-field-rename": "num_uints",
+    },
+  },
+];
+```
+
+#### Mark BigInt Fields
+
+Add bigint markers to 64-bit integer fields:
+
+```typescript
+fieldTransforms: [
+  {
+    fieldName: "amount",
+    addItems: {
+      "x-algokit-bigint": true,
+    },
+  },
+];
+```
+
+Or use vendor extension transforms:
+
+```typescript
+vendorExtensionTransforms: [
+  {
+    sourceProperty: "format",
+    sourceValue: "uint64",
+    targetProperty: "x-algokit-bigint",
+    targetValue: true,
+    removeSource: false,
+  },
+];
+```
+
+#### Add Required Field Transforms
+
+Remove incorrectly marked required fields:
+
+```typescript
+requiredFieldTransforms: [
+  {
+    schemaName: "ApplicationParams",
+    fieldName: "approval-program",
+    makeRequired: false, // Remove from required array
+  },
+  {
+    schemaName: "Transaction",
+    fieldName: ["fee", "sender"], // Multiple fields
+    makeRequired: true, // Add to required array
+  },
+];
+```
+
+#### Add Field Constraints
+
+Add min/max values or other constraints:
+
+```typescript
+fieldTransforms: [
+  {
+    fieldName: "num-uint",
+    removeItems: ["format"], // Remove existing format
+    addItems: {
+      minimum: 0,
+      maximum: 64,
+    },
+  },
+];
+```
+
+#### Add Schema Vendor Extensions
+
+Add vendor extensions at the schema level:
+
+```typescript
+schemaVendorExtensions: [
+  {
+    schemaName: "BoxReference",
+    extension: "x-algokit-box-reference",
+    value: true,
+  },
+];
+```
+
+#### Mark Msgpack/JSON Endpoints
+
+Force specific content types for endpoints:
+
+```typescript
+msgpackOnlyEndpoints: [
+  { path: "/v2/blocks/{round}", methods: ["get"] },
+],
+jsonOnlyEndpoints: [
+  { path: "/v2/accounts/{address}", methods: ["get"] },
+]
+```
+
+#### Add Endpoint Tags
+
+Tag endpoints for filtering (e.g., mark deprecated):
+
+```typescript
+endpointTagTransforms: [
+  {
+    path: "/v2/teal/dryrun",
+    methods: ["post"],
+    addTags: ["skip", "deprecated"],
+  },
+];
+```
+
+#### Rename Schemas
+
+Rename schema objects (useful for KMD API version prefixes):
+
+```typescript
+schemaRenames: [{ from: "APIV1POSTKeyResponse", to: "GenerateKeyResponse" }];
+```
+
+#### Rename Schema Fields
+
+Rename fields within specific schemas:
+
+```typescript
+schemaFieldRenames: [
+  {
+    schemaName: "MultisigSig",
+    fieldRenames: [
+      { from: "Subsigs", to: "subsig" },
+      { from: "Threshold", to: "thr" },
+    ],
+  },
+];
+```
+
+### Testing Changes
+
+After editing `config.ts`:
+
+```bash
+# Convert the modified spec
+npm run convert-algod  # or convert-indexer, convert-kmd
+
+# Check what changed
+git diff specs/algod.oas3.json
+
+# Validate the output
+npm run lint
+```
+
+### Reference
+
+- **Full type definitions**: See `types.ts` for complete interface definitions
+- **Existing configs**: Review `ALGOD_CONFIG`, `KMD_CONFIG`, `INDEXER_CONFIG` in `config.ts` for examples
+- **Shared transforms**: Use `UINT64_TRANSFORMS`, `SIGNED_TXN_TRANSFORM`, `BOX_REFERENCE_TRANSFORM` for common patterns
 
 ## Troubleshooting
 
 ### Rate Limiting
 
 If you encounter GitHub API rate limits:
+
 - Wait for the rate limit to reset
 - Use authenticated requests (set `GITHUB_TOKEN` environment variable)
 - Use cached specs if available
@@ -273,6 +491,7 @@ If you encounter GitHub API rate limits:
 ### Conversion Failures
 
 If conversion fails:
+
 - Check network connectivity
 - Verify the source URLs are accessible
 - Ensure Node.js and npm are up to date
@@ -289,17 +508,20 @@ This repository includes automated workflows for maintaining and releasing OpenA
 Runs every Monday at 9:00 AM UTC to detect upstream changes in Algorand's API specifications.
 
 **What it does**:
+
 - Fetches latest specs from go-algorand and indexer repositories
 - Converts them using the same process as `npm run convert-openapi`
 - Compares generated files with committed versions
 - Fails if differences are detected (indicating upstream changes)
 
 **When it fails**:
+
 1. Run `npm run convert-openapi` locally
 2. Review the changes with `git diff`
 3. Commit and push the updated specs
 
 **Manual trigger**:
+
 ```bash
 # Via GitHub Actions UI: Actions > OpenAPI Sync > Run workflow
 ```
@@ -311,6 +533,7 @@ Runs every Monday at 9:00 AM UTC to detect upstream changes in Algorand's API sp
 Creates GitHub releases with converted OpenAPI 3.0 specifications as downloadable assets.
 
 **What it does**:
+
 - Converts all three API specs (algod, indexer, kmd)
 - Creates a GitHub release with the specs as attachments
 - Includes metadata about source versions in release notes
@@ -318,18 +541,21 @@ Creates GitHub releases with converted OpenAPI 3.0 specifications as downloadabl
 **Trigger methods**:
 
 1. **Push a git tag**:
+
 ```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
 2. **Manual workflow dispatch**:
+
 ```bash
 # Via GitHub Actions UI: Actions > OpenAPI Release > Run workflow
 # Enter tag name: v1.0.0
 ```
 
 **Using released specs**:
+
 ```bash
 # Download from releases
 curl -LO https://github.com/YOUR_ORG/algokit-configs/releases/download/v1.0.0/algod.oas3.json
