@@ -3448,7 +3448,8 @@
           },
           "first-valid": {
             "type": "integer",
-            "description": "\\[fv\\] First valid round for this transaction."
+            "description": "\\[fv\\] First valid round for this transaction.",
+            "x-algokit-bigint": true
           },
           "genesis-hash": {
             "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
@@ -3479,7 +3480,8 @@
           },
           "last-valid": {
             "type": "integer",
-            "description": "\\[lv\\] Last valid round for this transaction."
+            "description": "\\[lv\\] Last valid round for this transaction.",
+            "x-algokit-bigint": true
           },
           "lease": {
             "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
