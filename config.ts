@@ -104,6 +104,8 @@ export const BIGINT_FIELDS: BigIntField[] = [
   { fieldName: "close-rewards" },
   { fieldName: "receiver-rewards" },
   { fieldName: "sender-rewards" },
+  { fieldName: "first-valid" },
+  { fieldName: "last-valid" },
 ];
 
 // ===== SHARED VENDOR EXTENSION TRANSFORMS =====
