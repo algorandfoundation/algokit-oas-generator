@@ -161,6 +161,12 @@ flowchart LR
 - Marks binary data encoded as base64 strings
 - Examples: `private_key` in KMD
 
+**Locals Reference** (`x-algokit-locals-reference: true`)
+
+- Marks schemas that reference an account's local state for an application
+- Applied to: `ApplicationLocalReference` schema
+- Enables proper handling of local state references in code generation
+
 ### 2. Field Corrections
 
 **Required Fields**
