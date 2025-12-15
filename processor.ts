@@ -12,8 +12,9 @@ import type {
   CustomSchema,
   FilterEndpoint,
   EndpointTagTransform,
+  FixedLengthByteField,
 } from "./types.js";
-import { MISSING_DESCRIPTIONS, FIELD_RENAMES, BIGINT_FIELDS } from "./config.js";
+import { MISSING_DESCRIPTIONS, FIELD_RENAMES, BIGINT_FIELDS, FIXED_LENGTH_BYTE_FIELDS } from "./config.js";
 
 // ===== TRAVERSAL UTILITIES =====
 
@@ -319,6 +320,52 @@ function fixBigInt(spec: OpenAPISpec): number {
         if (propDef && typeof propDef === "object" && propDef.type === "integer" && !propDef["x-algokit-bigint"] && shouldMark(propName)) {
           propDef["x-algokit-bigint"] = true;
           fixedCount++;
+        }
+      }
+    }
+  });
+
+  return fixedCount;
+}
+
+/**
+ * Fix fixed-length byte arrays - Add x-algokit-byte-length to byte fields that have a known fixed length
+ * This is similar to how js-algorand-sdk uses FixedLengthByteArraySchema(32) for 32-byte fields
+ */
+function fixFixedLengthByteFields(spec: OpenAPISpec, fields: FixedLengthByteField[]): number {
+  let fixedCount = 0;
+
+  const findByteLength = (fieldName: string, schemaName?: string) =>
+    fields.find((f) => f.fieldName === fieldName && (!f.schemaName || f.schemaName === schemaName));
+
+  // Process schema properties
+  forEachSchemaProperty(spec, (schemaName, propName, propDef) => {
+    // Only apply to byte format string fields
+    if (propDef.type === "string" && propDef.format === "byte" && !propDef["x-algokit-byte-length"]) {
+      const field = findByteLength(propName, schemaName);
+      if (field) {
+        propDef["x-algokit-byte-length"] = field.byteLength;
+        fixedCount++;
+      }
+    }
+  });
+
+  // Process inline response schemas
+  deepTraverse(spec, (obj, path) => {
+    if (path.length >= 2 && path[path.length - 1] === "properties" && path.includes("responses")) {
+      for (const [propName, propDef] of Object.entries(obj as Record<string, any>)) {
+        if (
+          propDef &&
+          typeof propDef === "object" &&
+          propDef.type === "string" &&
+          propDef.format === "byte" &&
+          !propDef["x-algokit-byte-length"]
+        ) {
+          const field = findByteLength(propName);
+          if (field) {
+            propDef["x-algokit-byte-length"] = field.byteLength;
+            fixedCount++;
+          }
         }
       }
     }
@@ -1022,6 +1069,13 @@ export class OpenAPIProcessor {
       // Fix bigint properties
       const bigIntCount = fixBigInt(spec);
       console.log(`ℹ️  Added x-algokit-bigint to ${bigIntCount} properties`);
+
+      // Fix fixed-length byte array fields
+      const fixedByteFields = this.config.fixedLengthByteFields ?? FIXED_LENGTH_BYTE_FIELDS;
+      if (fixedByteFields.length > 0) {
+        const fixedByteCount = fixFixedLengthByteFields(spec, fixedByteFields);
+        console.log(`ℹ️  Added x-algokit-byte-length to ${fixedByteCount} byte fields`);
+      }
 
       // Make all fields required if configured
       if (this.config.makeAllFieldsRequired) {
