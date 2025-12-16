@@ -93,6 +93,8 @@ export interface ProcessingConfig {
   endpointTagTransforms?: EndpointTagTransform[];
   // Schema-level vendor extensions to add (e.g., x-algokit-box-reference on BoxReference schema)
   schemaVendorExtensions?: SchemaVendorExtension[];
+  // Fixed-length byte array fields to add x-algokit-byte-length extension
+  fixedLengthByteFields?: FixedLengthByteField[];
 }
 
 export interface OAS2Spec {
@@ -110,6 +112,12 @@ export interface BigIntField {
   excludedModels?: string[];
 }
 
+export interface FixedLengthByteField {
+  fieldName: string;
+  byteLength: number;
+  schemaName?: string;
+}
+
 export interface SchemaVendorExtension {
   schemaName: string;
   extension: string;
@@ -118,4 +126,5 @@ export interface SchemaVendorExtension {
 
 export interface SpecConfig extends Omit<ProcessingConfig, "sourceUrl" | "outputPath" | "converterEndpoint" | "indent" | "customSchemas"> {
   customSchemas?: Omit<CustomSchema, "schema">[];
+  fixedLengthByteFields?: FixedLengthByteField[];
 }

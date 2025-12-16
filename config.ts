@@ -131,6 +131,52 @@ export const BOX_REFERENCE_TRANSFORM: VendorExtensionTransform = {
   removeSource: false,
 };
 
+// ===== FIXED-LENGTH BYTE ARRAY FIELDS =====
+// Fields that represent fixed-length byte arrays (similar to js-algorand-sdk's FixedLengthByteArraySchema)
+// These are byte fields that should have a specific length constraint for validation
+
+export interface FixedLengthByteField {
+  fieldName: string;
+  byteLength: number;
+  schemaName?: string; // Optional: specific schema name to target
+}
+
+export const FIXED_LENGTH_BYTE_FIELDS: FixedLengthByteField[] = [
+  // 32-byte fields (public keys, hashes)
+  { fieldName: "genesis-hash", byteLength: 32 },
+  { fieldName: "selection-participation-key", byteLength: 32 },
+  { fieldName: "vote-participation-key", byteLength: 32 },
+  { fieldName: "previous-block-hash", byteLength: 32 },
+  { fieldName: "seed", byteLength: 32 },
+  { fieldName: "transactions-root", byteLength: 32 },
+  { fieldName: "transactions-root-sha256", byteLength: 32 },
+  { fieldName: "metadata-hash", byteLength: 32 },
+  // Transaction fields (32-byte)
+  { fieldName: "lease", byteLength: 32 },
+  { fieldName: "group", byteLength: 32 },
+  // Multisig subsignature public key (32-byte)
+  { fieldName: "public-key", schemaName: "TransactionSignatureMultisigSubsignature", byteLength: 32 },
+  // Heartbeat fields (32-byte) - matching algokit-utils-ts
+  { fieldName: "hb-pk", byteLength: 32 },
+  { fieldName: "hb-pk2", byteLength: 32 },
+  { fieldName: "hb-vote-id", byteLength: 32 },
+  // 64-byte fields (signatures, state proof keys, SHA-512 hashes)
+  { fieldName: "state-proof-key", byteLength: 64 },
+  // State proof verifier commitment (64-byte) - MerkleSignatureSchemeRootSize = SumhashDigestSize = 64
+  { fieldName: "commitment", schemaName: "StateProofVerifier", byteLength: 64 },
+  // SHA-512 hash fields (64-byte)
+  { fieldName: "previous-block-hash-512", byteLength: 64 },
+  { fieldName: "transactions-root-sha512", byteLength: 64 },
+  // Transaction/multisig signatures (64-byte)
+  { fieldName: "signature", schemaName: "TransactionSignature", byteLength: 64 },
+  { fieldName: "signature", schemaName: "TransactionSignatureLogicsig", byteLength: 64 },
+  { fieldName: "signature", schemaName: "TransactionSignatureMultisigSubsignature", byteLength: 64 },
+  // Heartbeat signatures (64-byte)
+  { fieldName: "hb-sig", byteLength: 64 },
+  { fieldName: "hb-pk1sig", byteLength: 64 },
+  { fieldName: "hb-pk2sig", byteLength: 64 },
+];
+
 // ===== ALGOD CONFIG =====
 
 export const ALGOD_CONFIG: Omit<ProcessingConfig, "sourceUrl" | "outputPath"> = {
