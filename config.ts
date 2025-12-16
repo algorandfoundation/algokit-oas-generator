@@ -160,10 +160,13 @@ export const FIXED_LENGTH_BYTE_FIELDS: FixedLengthByteField[] = [
   { fieldName: "hb-pk", byteLength: 32 },
   { fieldName: "hb-pk2", byteLength: 32 },
   { fieldName: "hb-vote-id", byteLength: 32 },
-  // 64-byte fields (signatures, state proof keys)
+  // 64-byte fields (signatures, state proof keys, SHA-512 hashes)
   { fieldName: "state-proof-key", byteLength: 64 },
   // State proof verifier commitment (64-byte) - MerkleSignatureSchemeRootSize = SumhashDigestSize = 64
   { fieldName: "commitment", schemaName: "StateProofVerifier", byteLength: 64 },
+  // SHA-512 hash fields (64-byte)
+  { fieldName: "previous-block-hash-512", byteLength: 64 },
+  { fieldName: "transactions-root-sha512", byteLength: 64 },
   // Transaction/multisig signatures (64-byte)
   { fieldName: "signature", schemaName: "TransactionSignature", byteLength: 64 },
   { fieldName: "signature", schemaName: "TransactionSignatureLogicsig", byteLength: 64 },
