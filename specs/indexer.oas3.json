@@ -2561,7 +2561,8 @@
         "type": "object",
         "properties": {
           "key": {
-            "type": "string"
+            "type": "string",
+            "format": "byte"
           },
           "value": {
             "$ref": "#/components/schemas/TealValue"
@@ -2584,7 +2585,7 @@
           "bytes": {
             "type": "string",
             "description": "bytes value.",
-            "x-algokit-bytes-base64": true
+            "format": "byte"
           },
           "uint": {
             "type": "integer",
@@ -3338,7 +3339,8 @@
         "type": "object",
         "properties": {
           "key": {
-            "type": "string"
+            "type": "string",
+            "format": "byte"
           },
           "value": {
             "$ref": "#/components/schemas/EvalDelta"
@@ -3358,7 +3360,8 @@
           },
           "bytes": {
             "type": "string",
-            "description": "\\[bs\\] bytes value."
+            "description": "\\[bs\\] bytes value.",
+            "format": "byte"
           },
           "uint": {
             "type": "integer",

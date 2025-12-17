@@ -710,7 +710,7 @@
         "properties": {
           "private_key": {
             "type": "string",
-            "x-algokit-bytes-base64": true
+            "format": "byte"
           }
         },
         "description": "ExportKeyResponse is the response to `POST /v1/key/export`",
@@ -1226,7 +1226,7 @@
         "properties": {
           "private_key": {
             "type": "string",
-            "x-algokit-bytes-base64": true
+            "format": "byte"
           },
           "wallet_handle_token": {
             "type": "string",

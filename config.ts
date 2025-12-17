@@ -295,6 +295,13 @@ export const ALGOD_CONFIG: Omit<ProcessingConfig, "sourceUrl" | "outputPath"> = 
       },
     },
     {
+      fieldName: "bytes",
+      schemaName: "TealValue",
+      addItems: {
+        format: "byte",
+      },
+    },
+    {
       fieldName: "key",
       schemaName: "EvalDeltaKeyValue",
       addItems: {
@@ -599,7 +606,7 @@ export const KMD_CONFIG: Omit<ProcessingConfig, "sourceUrl" | "outputPath"> = {
       removeItems: ["$ref"],
       addItems: {
         type: "string",
-        "x-algokit-bytes-base64": true,
+        format: "byte",
       },
     },
     {
@@ -797,6 +804,34 @@ export const INDEXER_CONFIG: Omit<ProcessingConfig, "sourceUrl" | "outputPath"> 
     },
     {
       fieldName: "args.items",
+      addItems: {
+        format: "byte",
+      },
+    },
+    {
+      fieldName: "key",
+      schemaName: "TealKeyValue",
+      addItems: {
+        format: "byte",
+      },
+    },
+    {
+      fieldName: "bytes",
+      schemaName: "TealValue",
+      addItems: {
+        format: "byte",
+      },
+    },
+    {
+      fieldName: "key",
+      schemaName: "EvalDeltaKeyValue",
+      addItems: {
+        format: "byte",
+      },
+    },
+    {
+      fieldName: "bytes",
+      schemaName: "EvalDelta",
       addItems: {
         format: "byte",
       },

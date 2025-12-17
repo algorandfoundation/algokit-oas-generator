@@ -274,20 +274,6 @@ function fixFieldNaming(spec: OpenAPISpec): number {
 }
 
 /**
- * Fix TealValue bytes - Add base64 extension for TealValue.bytes fields
- */
-function fixTealValueBytes(spec: OpenAPISpec): number {
-  let fixedCount = 0;
-  forEachSchemaProperty(spec, (schemaName, propName, propDef) => {
-    if (schemaName === "TealValue" && propName === "bytes") {
-      propDef["x-algokit-bytes-base64"] = true;
-      fixedCount++;
-    }
-  });
-  return fixedCount;
-}
-
-/**
  * Fix bigint - Add x-algokit-bigint: true to properties that represent large integers
  */
 function fixBigInt(spec: OpenAPISpec): number {
@@ -1061,10 +1047,6 @@ export class OpenAPIProcessor {
       // Fix field naming
       const fieldNamingCount = fixFieldNaming(spec);
       console.log(`ℹ️  Added field rename extensions to ${fieldNamingCount} properties`);
-
-      // Fix TealValue bytes fields
-      const tealValueCount = fixTealValueBytes(spec);
-      console.log(`ℹ️  Added bytes base64 extensions to ${tealValueCount} TealValue.bytes properties`);
 
       // Fix bigint properties
       const bigIntCount = fixBigInt(spec);
