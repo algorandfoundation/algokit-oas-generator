@@ -4638,7 +4638,7 @@
           "bytes": {
             "type": "string",
             "description": "\\[tb\\] bytes value.",
-            "x-algokit-bytes-base64": true
+            "format": "byte"
           },
           "uint": {
             "type": "integer",

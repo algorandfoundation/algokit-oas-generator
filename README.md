@@ -11,7 +11,6 @@ This converter fetches the latest OpenAPI specifications from the official Algor
 - **Algorand Extensions**: Adds vendor extensions for Algorand-specific types:
   - `x-algokit-bigint`: Marks 64-bit integer fields
   - `x-algokit-signed-txn`: Identifies SignedTransaction fields
-  - `x-algokit-bytes-base64`: Marks base64-encoded binary data
 - **Validation & Fixes**: Automatically fixes known issues in source specs
 - **Msgpack Support**: Marks endpoints and fields that use msgpack encoding
 - **Field Transformations**: Applies required field corrections and naming fixes
@@ -155,11 +154,6 @@ flowchart LR
 - Identifies SignedTransaction types
 - Applied to: `x-algorand-format: "SignedTransaction"`
 - Enables proper msgpack serialization
-
-**Base64 Bytes** (`x-algokit-bytes-base64: true`)
-
-- Marks binary data encoded as base64 strings
-- Examples: `private_key` in KMD
 
 **Locals Reference** (`x-algokit-locals-reference: true`)
 
