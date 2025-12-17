@@ -485,7 +485,7 @@
       "post": {
         "summary": "Get wallet info",
         "description": "Returns information about the wallet associated with the passed wallet handle token. Additionally returns expiration information about the token itself.\n",
-        "operationId": "GetWalletInfo",
+        "operationId": "WalletInfo",
         "requestBody": {
           "content": {
             "application/json": {
@@ -658,7 +658,7 @@
     "/versions": {
       "get": {
         "summary": "Retrieves the current version",
-        "operationId": "GetVersion",
+        "operationId": "Version",
         "requestBody": {
           "content": {
             "application/json": {

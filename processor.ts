@@ -13,6 +13,7 @@ import type {
   FilterEndpoint,
   EndpointTagTransform,
   FixedLengthByteField,
+  OperationIdTransform,
 } from "./types.js";
 import { MISSING_DESCRIPTIONS, FIELD_RENAMES, BIGINT_FIELDS, FIXED_LENGTH_BYTE_FIELDS } from "./config.js";
 
@@ -813,6 +814,55 @@ function transformEndpointTags(spec: OpenAPISpec, transforms: EndpointTagTransfo
 }
 
 /**
+ * Transform operationIds based on configuration rules.
+ * Supports both pattern-based (stripPrefix/stripSuffix) and explicit (from/to) transforms.
+ * Processing order: explicit from/to renames first, then stripPrefix, then stripSuffix.
+ */
+function transformOperationIds(spec: OpenAPISpec, transforms: OperationIdTransform[]): number {
+  let transformedCount = 0;
+
+  // Separate transforms by type for ordered processing
+  const explicitTransforms = transforms.filter((t) => t.from && t.to);
+  const prefixTransforms = transforms.filter((t) => t.stripPrefix);
+  const suffixTransforms = transforms.filter((t) => t.stripSuffix);
+
+  forEachOperation(spec, (_path, _method, operation) => {
+    if (!operation.operationId) return;
+
+    // 1. Apply explicit from/to renames first (e.g., typo fixes)
+    for (const transform of explicitTransforms) {
+      if (operation.operationId === transform.from) {
+        operation.operationId = transform.to;
+        transformedCount++;
+        return; // Only apply first matching transform
+      }
+    }
+
+    // 2. Apply stripPrefix transforms
+    for (const transform of prefixTransforms) {
+      if (transform.stripPrefix && operation.operationId.startsWith(transform.stripPrefix)) {
+        const newId = operation.operationId.slice(transform.stripPrefix.length);
+        // Preserve PascalCase: ensure first char is uppercase
+        operation.operationId = newId.charAt(0).toUpperCase() + newId.slice(1);
+        transformedCount++;
+        return; // Only apply first matching transform
+      }
+    }
+
+    // 3. Apply stripSuffix transforms
+    for (const transform of suffixTransforms) {
+      if (transform.stripSuffix && operation.operationId.endsWith(transform.stripSuffix)) {
+        operation.operationId = operation.operationId.slice(0, -transform.stripSuffix.length);
+        transformedCount++;
+        return; // Only apply first matching transform
+      }
+    }
+  });
+
+  return transformedCount;
+}
+
+/**
  * Remove schemas that have no properties and update all references to them
  */
 function removeEmptySchemas(spec: OpenAPISpec): number {
@@ -1092,6 +1142,12 @@ export class OpenAPIProcessor {
             console.log(`ℹ️  Transformed ${count} ${sourceProperty}: ${sourceValue} to ${transform.targetProperty}`);
           }
         }
+      }
+
+      // Transform operationIds if configured
+      if (this.config.operationIdTransforms && this.config.operationIdTransforms.length > 0) {
+        const opIdCount = transformOperationIds(spec, this.config.operationIdTransforms);
+        console.log(`ℹ️  Transformed ${opIdCount} operationIds`);
       }
 
       // Enforce msgpack-only endpoints if configured

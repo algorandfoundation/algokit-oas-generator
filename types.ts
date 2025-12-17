@@ -70,6 +70,16 @@ export interface EndpointTagTransform {
   removeTags?: string[]; // Tags to remove from the endpoint
 }
 
+export interface OperationIdTransform {
+  // Pattern-based transformations (apply to all matching operationIds)
+  stripPrefix?: string; // e.g., "Get" - removes "Get" from start of operationId
+  stripSuffix?: string; // e.g., "ByID" - removes from end
+
+  // Explicit rename (for special cases like makeHealthCheck → HealthCheck)
+  from?: string; // Original operationId
+  to?: string; // New operationId
+}
+
 export interface ProcessingConfig {
   sourceUrl: string;
   outputPath: string;
@@ -95,6 +105,8 @@ export interface ProcessingConfig {
   schemaVendorExtensions?: SchemaVendorExtension[];
   // Fixed-length byte array fields to add x-algokit-byte-length extension
   fixedLengthByteFields?: FixedLengthByteField[];
+  // OperationId transforms for renaming or pattern-based modifications
+  operationIdTransforms?: OperationIdTransform[];
 }
 
 export interface OAS2Spec {
