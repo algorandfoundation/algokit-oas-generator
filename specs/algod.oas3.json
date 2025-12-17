@@ -56,7 +56,7 @@
           "common"
         ],
         "summary": "Returns OK if healthy and fully caught up.",
-        "operationId": "GetReady",
+        "operationId": "Ready",
         "responses": {
           "200": {
             "description": "OK.",
@@ -106,7 +106,7 @@
         ],
         "summary": "Gets the genesis information.",
         "description": "Returns the entire genesis file in json.",
-        "operationId": "GetGenesis",
+        "operationId": "Genesis",
         "responses": {
           "200": {
             "description": "The genesis file in json.",
@@ -160,7 +160,7 @@
           "common"
         ],
         "description": "Retrieves the supported API versions, binary build versions, and genesis information.",
-        "operationId": "GetVersion",
+        "operationId": "Version",
         "responses": {
           "200": {
             "description": "VersionsResponse is the response to 'GET /versions'",
@@ -181,7 +181,7 @@
           "private"
         ],
         "description": "Retrieves the current settings for blocking and mutex profiles",
-        "operationId": "GetDebugSettingsProf",
+        "operationId": "DebugSettingsProf",
         "responses": {
           "200": {
             "description": "DebugPprof is the response to the /debug/extra/pprof endpoint",
@@ -222,7 +222,7 @@
         ],
         "summary": "Gets the merged config file.",
         "description": "Returns the merged (defaults + overrides) config file in json.",
-        "operationId": "GetConfig",
+        "operationId": "Config",
         "responses": {
           "200": {
             "description": "The merged config file in json.",
@@ -655,7 +655,7 @@
         ],
         "summary": "Get a list of unconfirmed transactions currently in the transaction pool by address.",
         "description": "Get the list of pending transactions by address, sorted by priority, in decreasing order, truncated at the end at MAX. If MAX = 0, returns all pending transactions.\n",
-        "operationId": "GetPendingTransactionsByAddress",
+        "operationId": "PendingTransactionsByAddress",
         "parameters": [
           {
             "name": "address",
@@ -759,7 +759,7 @@
           "nonparticipating"
         ],
         "summary": "Get the block for the given round.",
-        "operationId": "GetBlock",
+        "operationId": "Block",
         "parameters": [
           {
             "name": "round",
@@ -861,7 +861,7 @@
           "nonparticipating"
         ],
         "summary": "Get the top level transaction IDs for the block on the given round.",
-        "operationId": "GetBlockTxIds",
+        "operationId": "BlockTxIds",
         "parameters": [
           {
             "name": "round",
@@ -943,7 +943,7 @@
           "nonparticipating"
         ],
         "summary": "Get the block hash for the block on the given round.",
-        "operationId": "GetBlockHash",
+        "operationId": "BlockHash",
         "parameters": [
           {
             "name": "round",
@@ -1025,7 +1025,7 @@
           "nonparticipating"
         ],
         "summary": "Get a proof for a transaction in a block.",
-        "operationId": "GetTransactionProof",
+        "operationId": "TransactionProof",
         "parameters": [
           {
             "name": "round",
@@ -1144,7 +1144,7 @@
         ],
         "summary": "Get all of the logs from outer and inner app calls in the given round",
         "description": "Get all of the logs from outer and inner app calls in the given round",
-        "operationId": "GetBlockLogs",
+        "operationId": "BlockLogs",
         "parameters": [
           {
             "name": "round",
@@ -1222,7 +1222,7 @@
           "nonparticipating"
         ],
         "summary": "Get the current supply reported by the ledger.",
-        "operationId": "GetSupply",
+        "operationId": "Supply",
         "responses": {
           "200": {
             "description": "Supply represents the current supply of MicroAlgos in the system.",
@@ -1259,7 +1259,7 @@
         ],
         "summary": "Return a list of participation keys",
         "description": "Return a list of participation keys",
-        "operationId": "GetParticipationKeys",
+        "operationId": "ParticipationKeys",
         "responses": {
           "200": {
             "description": "A list of participation keys",
@@ -1533,7 +1533,7 @@
         ],
         "summary": "Get participation key info given a participation ID",
         "description": "Given a participation ID, return information about that participation key",
-        "operationId": "GetParticipationKeyByID",
+        "operationId": "ParticipationKeyByID",
         "parameters": [
           {
             "name": "participation-id",
@@ -1798,7 +1798,7 @@
           "nonparticipating"
         ],
         "summary": "Gets the current node status.",
-        "operationId": "GetStatus",
+        "operationId": "Status",
         "responses": {
           "200": {
             "content": {
@@ -2232,7 +2232,7 @@
         ],
         "summary": "Get a list of unconfirmed transactions currently in the transaction pool.",
         "description": "Get the list of pending transactions, sorted by priority, in decreasing order, truncated at the end at MAX. If MAX = 0, returns all pending transactions.\n",
-        "operationId": "GetPendingTransactions",
+        "operationId": "PendingTransactions",
         "parameters": [
           {
             "name": "max",
@@ -2395,7 +2395,7 @@
         ],
         "summary": "Get a LedgerStateDelta object for a given round",
         "description": "Get ledger deltas for a round.",
-        "operationId": "GetLedgerStateDelta",
+        "operationId": "LedgerStateDelta",
         "parameters": [
           {
             "name": "round",
@@ -2500,7 +2500,7 @@
         ],
         "summary": "Get LedgerStateDelta objects for all transaction groups in a given round",
         "description": "Get ledger deltas for transaction groups in a given round.",
-        "operationId": "GetTransactionGroupLedgerStateDeltasForRound",
+        "operationId": "TransactionGroupLedgerStateDeltasForRound",
         "parameters": [
           {
             "name": "round",
@@ -2605,7 +2605,7 @@
         ],
         "summary": "Get a LedgerStateDelta object for a given transaction group",
         "description": "Get a ledger delta for a given transaction group.",
-        "operationId": "GetLedgerStateDeltaForTransactionGroup",
+        "operationId": "LedgerStateDeltaForTransactionGroup",
         "parameters": [
           {
             "name": "id",
@@ -2705,7 +2705,7 @@
           "nonparticipating"
         ],
         "summary": "Get a state proof that covers a given round",
-        "operationId": "GetStateProof",
+        "operationId": "StateProof",
         "parameters": [
           {
             "name": "round",
@@ -2797,7 +2797,7 @@
           "nonparticipating"
         ],
         "summary": "Gets a proof for a given light block header inside a state proof commitment",
-        "operationId": "GetLightBlockHeaderProof",
+        "operationId": "LightBlockHeaderProof",
         "parameters": [
           {
             "name": "round",
@@ -2890,7 +2890,7 @@
         ],
         "summary": "Get application information.",
         "description": "Given a application ID, it returns application information including creator, approval and clear programs, global and local schemas, and global state.",
-        "operationId": "GetApplicationByID",
+        "operationId": "ApplicationByID",
         "parameters": [
           {
             "name": "application-id",
@@ -2973,7 +2973,7 @@
         ],
         "summary": "Get all box names for a given application.",
         "description": "Given an application ID, return all Box names. No particular ordering is guaranteed. Request fails when client or server-side configured limits prevent returning all Box names.",
-        "operationId": "GetApplicationBoxes",
+        "operationId": "ApplicationBoxes",
         "parameters": [
           {
             "name": "application-id",
@@ -3056,7 +3056,7 @@
         ],
         "summary": "Get box information for a given application.",
         "description": "Given an application ID and box name, it returns the round, box name, and value (each base64 encoded). Box names must be in the goal app call arg encoding form 'encoding:value'. For ints, use the form 'int:1234'. For raw bytes, use the form 'b64:A=='. For printable strings, use the form 'str:hello'. For addresses, use the form 'addr:XYZ...'.",
-        "operationId": "GetApplicationBoxByName",
+        "operationId": "ApplicationBoxByName",
         "parameters": [
           {
             "name": "application-id",
@@ -3148,7 +3148,7 @@
         ],
         "summary": "Get asset information.",
         "description": "Given a asset ID, it returns asset information including creator, name, total supply and special addresses.",
-        "operationId": "GetAssetByID",
+        "operationId": "AssetByID",
         "parameters": [
           {
             "name": "asset-id",
@@ -3231,7 +3231,7 @@
         ],
         "summary": "Returns the minimum sync round the ledger is keeping in cache.",
         "description": "Gets the minimum sync round for the ledger.",
-        "operationId": "GetSyncRound",
+        "operationId": "SyncRound",
         "responses": {
           "200": {
             "description": "Response containing the ledger's minimum sync round",
@@ -3869,7 +3869,7 @@
         ],
         "summary": "Returns the timestamp offset. Timestamp offsets can only be set in dev mode.",
         "description": "Gets the current timestamp offset.",
-        "operationId": "GetBlockTimeStampOffset",
+        "operationId": "BlockTimeStampOffset",
         "responses": {
           "200": {
             "description": "Response containing the timestamp offset in seconds",

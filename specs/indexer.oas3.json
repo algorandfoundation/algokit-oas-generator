@@ -32,7 +32,7 @@
           "common"
         ],
         "summary": "Returns 200 if healthy.",
-        "operationId": "makeHealthCheck",
+        "operationId": "HealthCheck",
         "responses": {
           "200": {
             "description": "(empty)",

@@ -11,6 +11,7 @@ import type {
   BigIntField,
   ProcessingConfig,
   SchemaVendorExtension,
+  OperationIdTransform,
 } from "./types.js";
 
 // ===== MISSING DESCRIPTIONS =====
@@ -383,33 +384,20 @@ export const ALGOD_CONFIG: Omit<ProcessingConfig, "sourceUrl" | "outputPath"> = 
       removeSource: false,
     },
     {
-      sourceProperty: "operationId",
-      sourceValue: "GetBlockTxids",
-      targetProperty: "operationId",
-      targetValue: "GetBlockTxIds",
-      removeSource: false,
-    },
-    {
-      sourceProperty: "operationId",
-      sourceValue: "SimulateTransaction",
-      targetProperty: "operationId",
-      targetValue: "SimulateTransactions",
-      removeSource: false,
-    },
-    {
-      sourceProperty: "operationId",
-      sourceValue: "WaitForBlock",
-      targetProperty: "operationId",
-      targetValue: "StatusAfterBlock",
-      removeSource: false,
-    },
-    {
       sourceProperty: "x-go-type",
       sourceValue: "basics.Address",
       targetProperty: "x-algorand-format",
       targetValue: "Address",
       removeSource: false,
     },
+  ],
+  operationIdTransforms: [
+    // Explicit renames (typo fixes and semantic changes) - applied first
+    { from: "GetBlockTxids", to: "BlockTxIds" }, // Typo fix + strip Get prefix
+    { from: "SimulateTransaction", to: "SimulateTransactions" },
+    { from: "WaitForBlock", to: "StatusAfterBlock" },
+    // Pattern-based: strip "Get" prefix from all remaining Get* operationIds
+    { stripPrefix: "Get" },
   ],
   msgpackOnlyEndpoints: [
     // Align with Go and JS SDKs that hardcode these to msgpack
@@ -480,26 +468,19 @@ export const KMD_CONFIG: Omit<ProcessingConfig, "sourceUrl" | "outputPath"> = {
   vendorExtensionTransforms: [
     ...UINT64_TRANSFORMS,
     {
-      sourceProperty: "operationId",
-      sourceValue: "ListMultisg",
-      targetProperty: "operationId",
-      targetValue: "ListMultisig",
-      removeSource: false,
-    },
-    {
-      sourceProperty: "operationId",
-      sourceValue: "InitWalletHandleToken",
-      targetProperty: "operationId",
-      targetValue: "InitWalletHandle",
-      removeSource: false,
-    },
-    {
       sourceProperty: "x-go-name",
       sourceValue: "Address",
       targetProperty: "x-algorand-format",
       targetValue: "Address",
       removeSource: false,
     },
+  ],
+  operationIdTransforms: [
+    // Explicit renames (typo fixes) - applied first
+    { from: "ListMultisg", to: "ListMultisig" }, // Typo fix
+    { from: "InitWalletHandleToken", to: "InitWalletHandle" },
+    // Pattern-based: strip "Get" prefix from all Get* operationIds
+    { stripPrefix: "Get" },
   ],
   schemaRenames: [
     { from: "APIV1DELETEKeyResponse", to: "DeleteKeyResponse" },
@@ -694,13 +675,11 @@ export const INDEXER_CONFIG: Omit<ProcessingConfig, "sourceUrl" | "outputPath"> 
       targetValue: "uint64",
       removeSource: true,
     },
-    {
-      sourceProperty: "operationId",
-      sourceValue: "lookupTransaction",
-      targetProperty: "operationId",
-      targetValue: "lookupTransactionByID",
-      removeSource: false,
-    },
+  ],
+  operationIdTransforms: [
+    // Explicit renames
+    { from: "lookupTransaction", to: "lookupTransactionByID" },
+    { from: "makeHealthCheck", to: "HealthCheck" }, // Align with algod naming convention
   ],
   requiredFieldTransforms: [
     {
