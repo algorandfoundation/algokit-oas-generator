@@ -692,6 +692,21 @@ export const INDEXER_CONFIG: Omit<ProcessingConfig, "sourceUrl" | "outputPath"> 
       fieldName: "clear-state-program",
       makeRequired: false,
     },
+    {
+      schemaName: "Block",
+      fieldName: "transactions-root-sha256",
+      makeRequired: false,
+    },
+    {
+      schemaName: "Block",
+      fieldName: ["rewards", "upgrade-state", "participation-updates", "transactions"],
+      makeRequired: true,
+    },
+    {
+      schemaName: "ParticipationUpdates",
+      fieldName: ["expired-participation-accounts", "absent-participation-accounts"],
+      makeRequired: true,
+    },
   ],
   fieldTransforms: [
     {

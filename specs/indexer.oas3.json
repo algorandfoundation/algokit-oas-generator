@@ -2859,7 +2859,10 @@
           "seed",
           "timestamp",
           "transactions-root",
-          "transactions-root-sha256"
+          "rewards",
+          "upgrade-state",
+          "participation-updates",
+          "transactions"
         ],
         "type": "object",
         "properties": {
@@ -3276,7 +3279,11 @@
             }
           }
         },
-        "description": "Participation account data that needs to be checked/acted on by the network."
+        "description": "Participation account data that needs to be checked/acted on by the network.",
+        "required": [
+          "expired-participation-accounts",
+          "absent-participation-accounts"
+        ]
       },
       "ResourceRef": {
         "type": "object",
