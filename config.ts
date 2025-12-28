@@ -308,6 +308,7 @@ export const ALGOD_CONFIG: Omit<ProcessingConfig, "sourceUrl" | "outputPath"> = 
       addItems: {
         pattern: "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
         format: "byte",
+        "x-algokit-bytes-base64": true,
       },
     },
     {
@@ -323,6 +324,7 @@ export const ALGOD_CONFIG: Omit<ProcessingConfig, "sourceUrl" | "outputPath"> = 
       addItems: {
         pattern: "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
         format: "byte",
+        "x-algokit-bytes-base64": true,
       },
     },
     {
