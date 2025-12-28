@@ -11,6 +11,7 @@ This converter fetches the latest OpenAPI specifications from the official Algor
 - **Algorand Extensions**: Adds vendor extensions for Algorand-specific types:
   - `x-algokit-bigint`: Marks 64-bit integer fields
   - `x-algokit-signed-txn`: Identifies SignedTransaction fields
+  - `x-algokit-bytes-base64`: Identifies as field as explicitly base64. This is used denote a msgpack field that is explicitly a base64 bytes string.
 - **Validation & Fixes**: Automatically fixes known issues in source specs
 - **Msgpack Support**: Marks endpoints and fields that use msgpack encoding
 - **Field Transformations**: Applies required field corrections and naming fixes
