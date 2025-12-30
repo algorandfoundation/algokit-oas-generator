@@ -832,5 +832,9 @@ export const INDEXER_CONFIG: Omit<ProcessingConfig, "sourceUrl" | "outputPath"> 
         format: "byte",
       },
     },
+    {
+      fieldName: "state-proof-type",
+      removeItems: ["x-algorand-format"],
+    },
   ],
 };
