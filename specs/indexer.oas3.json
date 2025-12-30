@@ -3729,8 +3729,7 @@
         "properties": {
           "state-proof-type": {
             "type": "integer",
-            "description": "\\[sptype\\] Type of the state proof. Integer representing an entry defined in protocol/stateproof.go",
-            "x-algokit-bigint": true
+            "description": "\\[sptype\\] Type of the state proof. Integer representing an entry defined in protocol/stateproof.go"
           },
           "state-proof": {
             "$ref": "#/components/schemas/StateProofFields"
